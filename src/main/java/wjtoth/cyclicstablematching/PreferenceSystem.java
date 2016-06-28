@@ -9,6 +9,8 @@ public class PreferenceSystem {
 	private ArrayList<Group> groups;
 	private int[] groupSizes;
 	
+	//TODO iterate over PerfectMatchings finding a Stable one, return success or fail
+	
 	public PreferenceSystem(int[] groupSizes) {
 		int n = groupSizes.length;
 		groups = new ArrayList<Group>(n);
