@@ -21,6 +21,14 @@ public class App {
 		PreferenceSystem initialPreferenceSystem = new PreferenceSystem(new int[] { 5, 5, 5 });
 		priorityQueue.add(initialPreferenceSystem);
 
+		//TODO
+		//while pQ not empty
+		//	remove Preference System from queue
+		//	attempt to Stable Match
+		//	if fail
+		//		Attempt to extend
+		//		Add all extensions
+		//		If no extensions then return counterexample
 	}
 
 	public static String padLeft(String s, int n) {
