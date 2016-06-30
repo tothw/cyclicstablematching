@@ -35,7 +35,7 @@ public class AgentTest
      */
     public void testAgent()
     {
-        Agent testAgent = new Agent(3);
+        Agent testAgent = new Agent(3,0,0);
         int[] preferences = {1,2,3};
         testAgent.setPreferences(preferences);
         

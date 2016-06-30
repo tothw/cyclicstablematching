@@ -3,6 +3,7 @@ package wjtoth.cyclicstablematching;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -12,16 +13,27 @@ public class Agent {
 	//value 0 means index agent is unacceptable
 	//greater value -> agent preferred more
 	private int[] preferences;
-	
+	private int index;
+	public int getIndex() {
+		return index;
+	}
+
+	public int getGroupIndex() {
+		return groupIndex;
+	}
+
+	private int groupIndex;
 	private int acceptablePartnerCount = 0;
 	private Set<Integer> unacceptablePartners;
 	
-	public Agent(int partnerGroupSize) {
+	public Agent(int partnerGroupSize, int index, int groupIndex) {
 		preferences = new int[partnerGroupSize];
 		unacceptablePartners = new HashSet<Integer>(partnerGroupSize);
 		for(int i = 0; i<partnerGroupSize; ++i) {
 			unacceptablePartners.add(i);
 		}
+		this.index = index;
+		this.groupIndex = groupIndex;
 	}
 	
 	public int[] getPreferences() {
@@ -59,6 +71,9 @@ public class Agent {
 	
 	//true if prefers 1 to 2
 	public boolean prefers(int agentIndex1, int agentIndex2) {
+		if(agentIndex2 < 0) {
+			return false;
+		}
 		return preferences[agentIndex1] > preferences[agentIndex2];
 	}
 	
@@ -87,7 +102,7 @@ public class Agent {
 	}
 	
 	public Agent deepCopy() {
-		Agent agent = new Agent(preferences.length);
+		Agent agent = new Agent(preferences.length, index, groupIndex);
 		for(int i = 0; i<preferences.length; ++i) {
 			agent.setAgentPreference(i, preferences[i]);
 		}
@@ -124,6 +139,14 @@ public class Agent {
 			--acceptablePartnerCount;
 			unacceptablePartners.add(agent);
 		}
+	}
+	
+	public int getFirstChoice() {
+		Iterator<Integer> rankedChoices = rankedOrder().iterator();
+		if(rankedChoices.hasNext()) {
+			return rankedChoices.next();		
+		}
+		return -1;
 	}
 	
 	public String toString() {
