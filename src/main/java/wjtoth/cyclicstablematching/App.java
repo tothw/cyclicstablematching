@@ -25,7 +25,7 @@ public class App {
 		 */
 		List<PreferenceSystem> toCheckQueue = new LinkedList<PreferenceSystem>();
 		List<PreferenceSystem> toExtendQueue = new LinkedList<PreferenceSystem>();
-		PreferenceSystem initialPreferenceSystem = new PreferenceSystem(
+		ArrayPreferenceSystem initialPreferenceSystem = new ArrayPreferenceSystem(
 				new int[] { NUMBER_OF_AGENTS, NUMBER_OF_AGENTS, NUMBER_OF_AGENTS });
 		// priorityQueue.add(initialPreferenceSystem);
 		toCheckQueue.add(initialPreferenceSystem);
