@@ -65,7 +65,10 @@ public class PreferenceSystem {
 	public List<PreferenceSystem> extend() {
 		List<PreferenceSystem> newSystems = new ArrayList<PreferenceSystem>();
 		Agent extender = getExtender();
-		for(int unacceptablePartner : filterUnacceptablePartners(extender)) {
+		Collection<Integer> unacceptablePartners = filterUnacceptablePartners(extender);
+		Integer[] unacceptablePartnerArray = new Integer[unacceptablePartners.size()];
+		unacceptablePartners.toArray(unacceptablePartnerArray);
+		for(int unacceptablePartner : unacceptablePartnerArray) {
 			//set
 			extender.append(unacceptablePartner);
 			newSystems.add(this.deepCopy());
@@ -78,18 +81,37 @@ public class PreferenceSystem {
 		if(agent.getAcceptablePartnerCount() == 0) {
 			ArrayList<Integer> retval = new ArrayList<Integer>();
 			Set<Integer> unacceptablePartners = agent.getUnacceptablePartners();
-			if((agent.getIndex() == 0 && agent.getGroupIndex() == 0) || (agent.getIndex() == 1 && agent.getGroupIndex() == 1)) {
+			if(fixFirstChoice1(agent)) {
 				if(unacceptablePartners.contains(1)) {
 					retval.add(1);	
 				}
 				return retval;
 			}else{
-				unacceptablePartners.remove(0);
-				retval.addAll(unacceptablePartners);
-				return retval;
+				if(fixFirstChoice2(agent)){
+					if(unacceptablePartners.contains(2)) {
+						retval.add(2);	
+					}
+					return retval;
+				}else{
+					unacceptablePartners.remove(0);
+					retval.addAll(unacceptablePartners);
+					return retval;
+				}
 			}
 		}
 		return agent.getUnacceptablePartners();
+	}
+	
+	private boolean fixFirstChoice2(Agent agent) {
+		return (agent.getIndex() == 1 && agent.getGroupIndex() == 0)
+				|| (agent.getIndex() == 2 && agent.getGroupIndex() == 1)
+				|| (agent.getIndex() == 2 && agent.getGroupIndex() == 2);
+	}
+	
+	private boolean fixFirstChoice1(Agent agent) {
+		return (agent.getIndex() == 0 && agent.getGroupIndex() == 0) 
+				|| (agent.getIndex() == 1 && agent.getGroupIndex() == 1)
+				|| (agent.getIndex() == 1 && agent.getGroupIndex() == 2);
 	}
 	
 	private Agent getExtender() {
@@ -125,9 +147,10 @@ public class PreferenceSystem {
 
 	private void sufficientChecks() {
 		checkFirstChoiceCycle();
-		if(!hasStableMatch) {
+		/* These will never happen by starting symmetry
+		 * if(!hasStableMatch) {
 			checkAllSameDifferent();
-		}
+		}*/
 	}
 	
 	private void checkFirstChoiceCycle() {
@@ -148,7 +171,7 @@ public class PreferenceSystem {
 			}
 			partnerIndex = groups.get(i).getAgents().get(partnerIndex).getFirstChoice();
 		}
-		if(agentFirstChoice == partnerIndex) {
+		if(agent.getIndex() == partnerIndex) {
 			hasStableMatch = true;
 		}
 	}

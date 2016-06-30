@@ -3,6 +3,7 @@ package wjtoth.cyclicstablematching;
 import java.util.PriorityQueue;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -22,8 +23,8 @@ public class App {
 		 * p1.sumAcceptablePartnerCount() - p2.sumAcceptablePartnerCount(); }
 		 * });
 		 */
-		List<PreferenceSystem> toCheckQueue = new ArrayList<PreferenceSystem>();
-		List<PreferenceSystem> toExtendQueue = new ArrayList<PreferenceSystem>();
+		List<PreferenceSystem> toCheckQueue = new LinkedList<PreferenceSystem>();
+		List<PreferenceSystem> toExtendQueue = new LinkedList<PreferenceSystem>();
 		PreferenceSystem initialPreferenceSystem = new PreferenceSystem(
 				new int[] { NUMBER_OF_AGENTS, NUMBER_OF_AGENTS, NUMBER_OF_AGENTS });
 		// priorityQueue.add(initialPreferenceSystem);
@@ -52,7 +53,7 @@ public class App {
 					toExtendQueue.add(preferenceSystem);
 				}
 				size = toCheckQueue.size();
-				if (size >= previousSize * 2 || size <= previousSize *0.5) {
+				if (size >= previousSize * 2) {
 					System.out.println("ToCheckQueue Size: " + size);
 					System.out.println("ExtensionQueue Size: " + toExtendQueue.size());
 					System.out.println(preferenceSystem);
