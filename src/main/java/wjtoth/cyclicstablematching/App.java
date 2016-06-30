@@ -14,37 +14,50 @@ public class App {
 		final int NUMBER_OF_GROUPS = 3;
 		final int NUMBER_OF_AGENTS = 5;
 
-		PriorityQueue<PreferenceSystem> priorityQueue = new PriorityQueue<PreferenceSystem>(
-				NUMBER_OF_GROUPS * NUMBER_OF_AGENTS * NUMBER_OF_AGENTS, new Comparator<PreferenceSystem>() {
-					public int compare(PreferenceSystem p1, PreferenceSystem p2) {
-						return p1.sumAcceptablePartnerCount() - p2.sumAcceptablePartnerCount();
-					}
-				});
-		PreferenceSystem initialPreferenceSystem = new PreferenceSystem(new int[] { NUMBER_OF_AGENTS, NUMBER_OF_AGENTS, NUMBER_OF_AGENTS });
-		priorityQueue.add(initialPreferenceSystem);
-		
+		/*
+		 * PriorityQueue<PreferenceSystem> priorityQueue = new
+		 * PriorityQueue<PreferenceSystem>( NUMBER_OF_GROUPS * NUMBER_OF_AGENTS
+		 * * NUMBER_OF_AGENTS, new Comparator<PreferenceSystem>() { public int
+		 * compare(PreferenceSystem p1, PreferenceSystem p2) { return
+		 * p1.sumAcceptablePartnerCount() - p2.sumAcceptablePartnerCount(); }
+		 * });
+		 */
+		List<PreferenceSystem> toCheckQueue = new ArrayList<PreferenceSystem>();
+		List<PreferenceSystem> toExtendQueue = new ArrayList<PreferenceSystem>();
+		PreferenceSystem initialPreferenceSystem = new PreferenceSystem(
+				new int[] { NUMBER_OF_AGENTS, NUMBER_OF_AGENTS, NUMBER_OF_AGENTS });
+		// priorityQueue.add(initialPreferenceSystem);
+		toCheckQueue.add(initialPreferenceSystem);
 		int size = 0;
 		int previousSize = 0;
-		
+
 		ArrayList<int[]> permutations = Permutations.permutations(NUMBER_OF_AGENTS);
-		CrossProduct<int[]> crossProduct = new CrossProduct<int[]> (permutations, NUMBER_OF_GROUPS);
-		while(!priorityQueue.isEmpty()){
-			PreferenceSystem preferenceSystem = priorityQueue.remove();
-			if(!preferenceSystem.hasStableMatch(crossProduct)){
-				List<PreferenceSystem> extensions = preferenceSystem.extend();
-				if(extensions.size() > 0 ) {
-					priorityQueue.addAll(extensions);
-				}else{
-					System.out.println("Found Counter Example!");
-					System.out.println(preferenceSystem);
-					break;
+		CrossProduct<int[]> crossProduct = new CrossProduct<int[]>(permutations, NUMBER_OF_GROUPS);
+		while (!toCheckQueue.isEmpty() || !toExtendQueue.isEmpty()) {
+			if (toCheckQueue.isEmpty()) {
+				for (PreferenceSystem preferenceSystem : toExtendQueue) {
+					List<PreferenceSystem> extensions = preferenceSystem.extend();
+					if (extensions.size() == 0){
+						System.out.println("Found Counter Example!");
+						System.out.println(preferenceSystem);
+						break;
+					}
+					toCheckQueue.addAll(extensions);
 				}
+				toExtendQueue.clear();
 			}
-			size = priorityQueue.size();
-			if(size >= previousSize*10) {
-				System.out.println(size);
-				System.out.println(preferenceSystem);
-				previousSize=size;
+			if (!toCheckQueue.isEmpty()) {
+				PreferenceSystem preferenceSystem = toCheckQueue.remove(0);
+				if (!preferenceSystem.hasStableMatch(crossProduct)) {
+					toExtendQueue.add(preferenceSystem);
+				}
+				size = toCheckQueue.size();
+				if (size >= previousSize * 2 || size <= previousSize *0.5) {
+					System.out.println("ToCheckQueue Size: " + size);
+					System.out.println("ExtensionQueue Size: " + toExtendQueue.size());
+					System.out.println(preferenceSystem);
+					previousSize = size;
+				}
 			}
 		}
 		System.out.println("DONE!");
