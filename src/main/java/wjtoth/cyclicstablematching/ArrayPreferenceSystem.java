@@ -17,6 +17,11 @@ public class ArrayPreferenceSystem implements PreferenceSystem {
 	//Form PerfectMatching checking
 	CrossProduct<Integer> blockers;
 	
+	@Override
+	public CrossProduct<Integer> getBlockers() {
+		return blockers;
+	}
+
 	public ArrayPreferenceSystem(int[] groupSizes) {
 		int n = groupSizes.length;
 		groups = new ArrayList<Group>(n);
@@ -297,8 +302,12 @@ public class ArrayPreferenceSystem implements PreferenceSystem {
 	/* (non-Javadoc)
 	 * @see wjtoth.cyclicstablematching.PreferenceSystem#getStableMatching()
 	 */
-	@Override
 	public PerfectMatching getStableMatching() {
 		return stableMatching;
+	}
+
+	@Override
+	public Agent getAgent(int groupIndex, int agentIndex) {
+		return groups.get(groupIndex).getAgents().get(agentIndex);
 	}
 }

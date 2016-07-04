@@ -21,6 +21,7 @@ public interface PreferenceSystem {
 	//assumes all groups have same size!
 	void attemptStableMatch(CrossProduct<int[]> permutationProductIterator);
 
-	PerfectMatching getStableMatching();
-
+	Agent getAgent(int groupIndex, int agentIndex);
+	
+	CrossProduct<Integer> getBlockers();
 }
