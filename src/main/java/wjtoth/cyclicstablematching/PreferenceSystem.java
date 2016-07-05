@@ -24,4 +24,10 @@ public interface PreferenceSystem {
 	Agent getAgent(int groupIndex, int agentIndex);
 	
 	CrossProduct<Integer> getBlockers();
+	
+	ArrayList<Group> getGroups();
+	
+	//returns a pair of Agents
+	//[0] gives extender [1] gives second choice
+	Agent[] getExtender();
 }

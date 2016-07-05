@@ -90,15 +90,13 @@ public class ArrayPreferenceSystem implements PreferenceSystem {
 	@Override
 	public List<PreferenceSystem> extend() {
 		List<PreferenceSystem> newSystems = new ArrayList<PreferenceSystem>();
-		Agent extender = getExtender();
+		Agent extender = getExtender()[0];
 		Collection<Integer> unacceptablePartners = filterUnacceptablePartners(extender);
 		Integer[] unacceptablePartnerArray = new Integer[unacceptablePartners.size()];
 		unacceptablePartners.toArray(unacceptablePartnerArray);
 		for(int unacceptablePartner : unacceptablePartnerArray) {
-			//set
-			extender.append(unacceptablePartner);
-			newSystems.add(this.deepCopy());
-			extender.remove(unacceptablePartner);
+			PreferenceSystem extendedSystem = new TreePreferenceSystem(this, extender.getGroupIndex(), extender.getIndex(), unacceptablePartner);
+			newSystems.add(extendedSystem);
 		}
 		return newSystems;
 	}
@@ -144,18 +142,22 @@ public class ArrayPreferenceSystem implements PreferenceSystem {
 				|| (agent.getIndex() == 1 && agent.getGroupIndex() == 2);
 	}
 	
-	private Agent getExtender() {
+	public Agent[] getExtender() {
+		Agent[] retval = new Agent[2];
 		Agent extender = groups.get(0).shortestAgent();
 		int groupLength = groups.get(0).sumAcceptablePartnerCount();
+		retval[0] = extender;
 		for(int i = 1; i < groups.size(); ++i) {
 			Agent candidate = groups.get(i).shortestAgent();
 			int candidateGroupLength = groups.get(i).sumAcceptablePartnerCount();
 			if(candidate.getAcceptablePartnerCount() <= extender.getAcceptablePartnerCount() && candidateGroupLength <= groupLength) {
+				retval[1] = extender;
+				retval[0] = candidate;
 				extender = candidate;
 				groupLength = candidateGroupLength;
 			}
 		}
-		return extender;
+		return retval;
 	}
 	
 	/* (non-Javadoc)

@@ -32,12 +32,6 @@ public class TreePreferenceSystem implements PreferenceSystem {
 	}
 
 	@Override
-	public List<PreferenceSystem> extend() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public Collection<Integer> filterUnacceptablePartners(Agent agent) {
 		Collection<Integer> previousUnacceptablePartners = parentPreferenceSystem.filterUnacceptablePartners(agent);
 		if(agent.getIndex() == extensionAgent && agent.getGroupIndex() == extensionGroup) {
@@ -64,7 +58,9 @@ public class TreePreferenceSystem implements PreferenceSystem {
 	}
 	
 	private void checkFirstChoiceCycle() {
-		for(Agent agent : groups.get(0).getAgents()) {
+		final int NUMBER_OF_GROUPS = getGroups().size();
+		for(int i = 0; i < NUMBER_OF_GROUPS; ++i){
+			Agent agent = getAgent(i,0);
 			checkFirstChoiceCycle(agent);
 			if(hasStableMatch) {
 				break;
@@ -75,11 +71,12 @@ public class TreePreferenceSystem implements PreferenceSystem {
 	private void checkFirstChoiceCycle(Agent agent) {
 		int agentFirstChoice = agent.getFirstChoice();
 		int partnerIndex = agentFirstChoice;
-		for(int i = 1; i<groups.size(); ++i) {
+		final int NUMBER_OF_GROUPS = getGroups().size();
+		for(int i = 1; i<NUMBER_OF_GROUPS; ++i) {
 			if(partnerIndex == -1) {
 				return;
 			}
-			partnerIndex = groups.get(i).getAgents().get(partnerIndex).getFirstChoice();
+			partnerIndex = getAgent(i, partnerIndex).getFirstChoice();
 		}
 		if(agent.getIndex() == partnerIndex) {
 			hasStableMatch = true;
@@ -88,7 +85,7 @@ public class TreePreferenceSystem implements PreferenceSystem {
 	
 	@SuppressWarnings("unused")
 	private void checkAllSameDifferent() {
-		for(Group group : groups) {
+		for(Group group : getGroups()) {
 			checkAllSameDifferent(group);
 		}
 	}
@@ -96,7 +93,7 @@ public class TreePreferenceSystem implements PreferenceSystem {
 	private void checkAllSameDifferent(Group group) {
 		int[] firstChoices  = new int[group.getGroupSize()];
 		for(int i = 0; i<firstChoices.length; ++i) {
-			firstChoices[i] = group.getAgents().get(i).getFirstChoice();
+			firstChoices[i] = getAgent(group.getIndex(), i).getFirstChoice();
 		}
 		//check all -1
 		boolean negativeOneChoices = true;
@@ -185,5 +182,70 @@ public class TreePreferenceSystem implements PreferenceSystem {
 	@Override
 	public CrossProduct<Integer> getBlockers() {
 		return parentPreferenceSystem.getBlockers();
+	}
+
+	@Override
+	public ArrayList<Group> getGroups() {
+		return parentPreferenceSystem.getGroups();
+	}
+	
+	@Override
+	public List<PreferenceSystem> extend() {
+		List<PreferenceSystem> newSystems = new ArrayList<PreferenceSystem>();
+		Agent extender = getExtender()[0];
+		Collection<Integer> unacceptablePartners = filterUnacceptablePartners(extender);
+		Integer[] unacceptablePartnerArray = new Integer[unacceptablePartners.size()];
+		unacceptablePartners.toArray(unacceptablePartnerArray);
+		for(int unacceptablePartner : unacceptablePartnerArray) {
+			PreferenceSystem extendedSystem = new TreePreferenceSystem(this, extender.getGroupIndex(), extender.getIndex(), unacceptablePartner);
+			newSystems.add(extendedSystem);
+		}
+		System.out.println("Adding Systems");
+		for(PreferenceSystem newSystem : newSystems) {
+			System.out.println(newSystem);
+		}
+		System.out.println("___");
+		return newSystems;
+	}
+	
+	public Agent[] getExtender() {
+		Agent[] retval = parentPreferenceSystem.getExtender();
+		Agent extender = retval[0];
+		Agent candidate = retval[1];
+		if(extender.getGroupIndex() == extensionGroup && extender.getIndex() == extensionAgent) {
+			if(extender.getAcceptablePartnerCount() + 1 > candidate.getAcceptablePartnerCount()) {
+				retval[0] = candidate;
+				retval[1] = getAgent(extensionGroup, extensionAgent);
+			}else{
+				retval[0] = getAgent(extensionGroup,extensionAgent);
+			}
+		}else{
+			if(candidate.getGroupIndex() == extensionGroup && candidate.getIndex() == extensionAgent) {
+				retval[1] = getAgent(extensionGroup, extensionAgent);
+			}
+		}
+		return retval;
+	}
+	
+	/* (non-Javadoc)
+	 * @see wjtoth.cyclicstablematching.PreferenceSystem#toString()
+	 */
+	@Override
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		for(int i = 0; i<getGroups().size(); ++i) {
+			sb.append("Group " + i + ":\n");
+			Group group = getGroups().get(i);
+			if(i!= extensionGroup) {
+				sb.append(group.toString());
+			}else {
+				for(int j = 0; j < group.getGroupSize(); ++j) {
+					sb.append(j+": ");
+					sb.append(getAgent(group.getIndex(), j).toString());
+					sb.append("\n");
+				}
+			}
+		}
+		return sb.toString();
 	}
 }
