@@ -259,4 +259,46 @@ public class PreferenceSystem {
 	public PerfectMatching getStableMatching() {
 		return stableMatching;
 	}
+	
+	public void sortPreferences() {
+		for(int i = groups.size()-1; i >= 0; --i) {
+			Group group = groups.get(i);
+			sortPreferences(group, 0, group.getGroupSize()-1);
+		}
+	}
+	
+	private void sortPreferences(Group group, int p, int r) {
+		if( p < r) {
+			int q = partition(group, p, r);
+			sortPreferences(group, p, q-1);
+			sortPreferences(group, q+1, r);
+		}
+	}
+	
+	private int partition(Group group, int p, int r) {
+		Agent x = group.getAgents().get(r);
+		int i = p-1;
+		for(int j = p; j<r; ++j) {
+			if(group.getAgents().get(j).compareTo(x)) {
+				++i;
+				exchange(group, i, j);
+			}
+		}
+		exchange(group, i+1, r);
+		return i+1;
+	}
+	private void exchange(Group group, int i, int j) {
+		System.out.println("Exchanging " + i + " and " + j + " in group " + group.getIndex());
+		ArrayList<Agent> agents = group.getAgents();
+		Agent tempAgent = agents.get(i);
+		agents.set(i, agents.get(j));
+		agents.set(j, tempAgent);
+		//adjust preferences of group whose preferences face this one
+		for(Agent agent : groups.get((group.getIndex() -1 + groups.size()) % groups.size()).getAgents()) {
+			int[] preferences = agent.getPreferences();
+			int tempRank = preferences[i];
+			agent.setAgentPreference(i, preferences[j]);
+			agent.setAgentPreference(j, tempRank);
+		}
+	}
 }

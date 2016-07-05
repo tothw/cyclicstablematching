@@ -56,6 +56,7 @@ public class App {
 				if (size >= previousSize * 2) {
 					System.out.println("ToCheckQueue Size: " + size);
 					System.out.println("ExtensionQueue Size: " + toExtendQueue.size());
+					preferenceSystem.sortPreferences();
 					System.out.println(preferenceSystem);
 					previousSize = size;
 				}

@@ -152,4 +152,36 @@ public class Agent {
 	public String toString() {
 		return rankedOrder().toString();
 	}
+	
+	//true if < in terms of preference system
+	public boolean compareTo(Agent agent) {
+		int[] agentPreferences = agent.getPreferences();
+		Set<Integer> agentUnacceptablePartners = agent.getUnacceptablePartners();
+		for(int i =0; i<agentPreferences.length; ++i) {
+			boolean containsI = unacceptablePartners.contains(i);
+			boolean agentContainsI = agentUnacceptablePartners.contains(i);
+			//if i unacceptable to this but not agent
+			if(containsI && !agentContainsI) {
+				return true;
+			}
+			//if i acceptable to this but not agent
+			if(!containsI && agentContainsI) {
+				return false;
+			}
+			//if acceptable to both
+			if(!(containsI || agentContainsI)){
+				//return true if strictly less than
+				if(preferences[i] < agentPreferences[i]) {
+					return true;
+				}
+				//return false if strictly greater than
+				if(preferences[i] > agentPreferences[i]) {
+					return false;
+				}
+				//check next index if equal
+			}
+		}
+		//if all indices survived checks then they are the same
+		return false;
+	}
 }
