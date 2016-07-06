@@ -26,17 +26,9 @@ public class Group {
 	public int getGroupSize() {
 		return groupSize;
 	}
-
-	public int getPartnerGroupSize() {
-		return partnerGroupSize;
-	}
 	
 	public ArrayList<Agent> getAgents() {
 		return agents;
-	}
-
-	public void setAgents(ArrayList<Agent> agents) {
-		this.agents = agents;
 	}
 
 	private void initializeAgents() {

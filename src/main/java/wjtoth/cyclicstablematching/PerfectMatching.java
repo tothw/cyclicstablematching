@@ -1,7 +1,6 @@
 package wjtoth.cyclicstablematching;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class PerfectMatching {
 	
@@ -39,5 +38,20 @@ public class PerfectMatching {
 			}
 		}
 		return partner;
+	}
+	
+	public String toString() {
+		StringBuffer stringBuffer = new StringBuffer();
+		stringBuffer.append("---------");
+		for(int i = 0; i< matching.size(); ++i) {
+			int[] orderedMatch = matching.get(i);
+			stringBuffer.append("(");
+			for(int j = 0; j< orderedMatch.length; ++j) {
+				stringBuffer.append(orderedMatch[j] + " ");
+			}
+			stringBuffer.append(")\n");
+		}
+		stringBuffer.append("---------");
+		return stringBuffer.toString();
 	}
 }

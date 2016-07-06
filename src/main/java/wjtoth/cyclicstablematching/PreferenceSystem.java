@@ -1,26 +1,31 @@
 package wjtoth.cyclicstablematching;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.lang.Comparable;
 
 public class PreferenceSystem implements Comparable<PreferenceSystem>{
 
 	private ArrayList<Group> groups;
 	private int[] groupSizes;
 	
-	private boolean hasStableMatch;
-	private PerfectMatching stableMatching;
-
 	private String hash;
-	
-	//Form PerfectMatching checking
-	CrossProduct<Integer> blockers;
+
 	
 	public PreferenceSystem(int[] groupSizes) {
+		init(groupSizes);
+	}
+	
+	public PreferenceSystem(int numberOfGroups, int numberOfAgents) {
+		int[] groupSizes = new int[numberOfGroups];
+		for(int i = 0; i<groupSizes.length; ++i) {
+			groupSizes[i] = numberOfAgents;
+		}
+		init(groupSizes);
+	}
+	
+	public void init(int[] groupSizes) {
 		int n = groupSizes.length;
 		groups = new ArrayList<Group>(n);
 		for(int i = 0; i<groupSizes.length; ++i) {
@@ -28,33 +33,11 @@ public class PreferenceSystem implements Comparable<PreferenceSystem>{
 			groups.add(group);			
 		}
 		this.groupSizes = groupSizes;
-		hasStableMatch = false;
-		ArrayList<Integer> agents = new ArrayList<Integer>();
-		for(int i = 0; i<groupSizes[0]; ++i) {
-			agents.add(i);
-		}
-		blockers = new CrossProduct<Integer>(agents, groups.size());
 		computeHash();
 	}
-	
+
 	public void setSystemGroup(int groupIndex, Group group) {
 		groups.set(groupIndex, group);
-	}
-	
-	public ArrayList<Group> getGroups() {
-		return groups;
-	}
-
-	public void setGroups(ArrayList<Group> groups) {
-		this.groups = groups;
-	}
-		
-	public int sumAcceptablePartnerCount() {
-		int sum = 0;
-		for(Group group: groups) {
-			sum += group.sumAcceptablePartnerCount();
-		}
-		return sum;
 	}
 	
 	public PreferenceSystem deepCopy() {
@@ -107,15 +90,15 @@ public class PreferenceSystem implements Comparable<PreferenceSystem>{
 	}
 	
 	private boolean fixFirstChoice2(Agent agent) {
-		return (agent.getIndex() == 1 && agent.getGroupIndex() == 0)
-				|| (agent.getIndex() == 2 && agent.getGroupIndex() == 1)
-				|| (agent.getIndex() == 2 && agent.getGroupIndex() == 2);
+		return agent.getIndex() == 1 && agent.getGroupIndex() == 0
+				|| agent.getIndex() == 2 && agent.getGroupIndex() == 1
+				|| agent.getIndex() == 2 && agent.getGroupIndex() == 2;
 	}
 	
 	private boolean fixFirstChoice1(Agent agent) {
-		return (agent.getIndex() == 0 && agent.getGroupIndex() == 0) 
-				|| (agent.getIndex() == 1 && agent.getGroupIndex() == 1)
-				|| (agent.getIndex() == 1 && agent.getGroupIndex() == 2);
+		return agent.getIndex() == 0 && agent.getGroupIndex() == 0 
+				|| agent.getIndex() == 1 && agent.getGroupIndex() == 1
+				|| agent.getIndex() == 1 && agent.getGroupIndex() == 2;
 	}
 	
 	private Agent getExtender() {
@@ -141,158 +124,8 @@ public class PreferenceSystem implements Comparable<PreferenceSystem>{
 		return sb.toString();
 	}
 	
-	public boolean hasStableMatch(CrossProduct<int[]> crossProduct) {
-		sufficientChecks();
-		if(!hasStableMatch) {
-			attemptStableMatch(crossProduct);
-		}
-		return hasStableMatch;
-	}
-
-	private void sufficientChecks() {
-		checkFirstChoiceCycle();
-		if(!hasStableMatch) {
-			checkFirstChoiceNineCycle();
-		}
-
-		/* These will never happen by starting symmetry
-		 * if(!hasStableMatch) {
-			checkAllSameDifferent();
-		}*/
-	}
-	
-	private void checkFirstChoiceCycle() {
-		for(Agent agent : groups.get(0).getAgents()) {
-			checkFirstChoiceCycle(agent);
-			if(hasStableMatch) {
-				break;
-			}
-		}
-	}
-	
-	private void checkFirstChoiceCycle(Agent agent) {
-		int agentFirstChoice = agent.getFirstChoice();
-		int partnerIndex = agentFirstChoice;
-		for(int i = 1; i<groups.size(); ++i) {
-			if(partnerIndex == -1) {
-				return;
-			}
-			partnerIndex = groups.get(i).getAgents().get(partnerIndex).getFirstChoice();
-		}
-		if(agent.getIndex() == partnerIndex) {
-			hasStableMatch = true;
-		}
-	}
-
-	private void checkFirstChoiceNineCycle() {
-		for(Agent agent : groups.get(0).getAgents()) {
-			checkFirstChoiceNineCycle(agent);
-			if(hasStableMatch) {
-				break;
-			}
-		}
-	}
-
-	private void checkFirstChoiceNineCycle(Agent agent) {
-		int agentFirstChoice = agent.getFirstChoice();
-		int partnerIndex = agentFirstChoice;
-		for(int i = 1; i<3*groups.size(); ++i) {
-			if(partnerIndex == -1) {
-				return;
-			}
-			partnerIndex = groups.get(i%3).getAgents().get(partnerIndex).getFirstChoice();
-		}
-		if(agent.getIndex() == partnerIndex) {
-			hasStableMatch = true;
-		}
-	}
-	
-	private void checkAllSameDifferent() {
-		for(Group group : groups) {
-			checkAllSameDifferent(group);
-		}
-	}
-	
-	private void checkAllSameDifferent(Group group) {
-		int[] firstChoices  = new int[group.getGroupSize()];
-		for(int i = 0; i<firstChoices.length; ++i) {
-			firstChoices[i] = group.getAgents().get(i).getFirstChoice();
-		}
-		//check all -1
-		boolean negativeOneChoices = true;
-		for(int i = 0; i<firstChoices.length; ++i) {
-			negativeOneChoices = negativeOneChoices && (firstChoices[i] == -1);
-		}
-		if(negativeOneChoices = true) {
-			return;
-		}
-		if(firstChoices.length == 1) {
-			if(firstChoices[0] != -1){
-				hasStableMatch = true;
-			}
-			return;
-		}
-		Arrays.sort(firstChoices);
-		System.out.println("First Choices: " + Arrays.toString(firstChoices));
-		if(firstChoices[0] == 0 && firstChoices[firstChoices.length-1] == firstChoices.length-1) {
-			hasStableMatch = true;
-			System.out.println("All Different");
-			return;
-		}
-		int choice = firstChoices[0];
-		if(firstChoices[firstChoices.length - 1] == choice) {
-			hasStableMatch = true;
-			System.out.println("All Same");
-		}
-	}
-	
-	//assumes all groups have same size!
-	public void attemptStableMatch(CrossProduct<int[]> permutationProductIterator) {
-		PerfectMatching perfectMatching = new PerfectMatching(permutationProductIterator.getDimension(),permutationProductIterator.getLength());
-		while(permutationProductIterator.hasNext()) {
-			ArrayList<int[]> permutationProduct = permutationProductIterator.next();
-			perfectMatching.setMatching(permutationProduct);
-			if (isStable(perfectMatching)) {
-				hasStableMatch = true;
-				stableMatching = perfectMatching;
-				break;
-			}
-		}
-	}
-	
-	private boolean isStable(PerfectMatching perfectMatching) {
-		blockers.reset();
-		while(blockers.hasNext()){
-			ArrayList<Integer> blocker = blockers.next();
-			if(isBlocking(blocker, perfectMatching)) {
-				return false;
-			}
-		}
-		return true;
-	}
-	
-	private boolean isBlocking(ArrayList<Integer> blocker, PerfectMatching perfectMatching) {
-		boolean retval = true;
-		for(int i = 0; i<blocker.size(); ++i) {
-			int agentIndex = blocker.get(i);
-			int blockPartner = blocker.get((i+1)%blocker.size());
-			int matchPartner = perfectMatching.getPartner(i, agentIndex);
-			/**
-			System.out.println("agentIndex " + agentIndex);
-			System.out.println("blockPartner " + blockPartner);
-			System.out.println("matchPartner " + matchPartner);
-			**/
-			retval = retval && !groups.get(i).getAgents().get(agentIndex).prefers(blockPartner, matchPartner);
-		}
-		return retval;
-	}
-	
-	public PerfectMatching getStableMatching() {
-		return stableMatching;
-	}
-	
 	public void sortPreferences() {
-		for(int i = 1; i < groups.size(); ++i) {
+		for(int i = groups.size()-1; i >0; --i) {
 			Group group = groups.get(i);
 			sortPreferences(group, 0, group.getGroupSize()-1);
 		}
@@ -353,5 +186,13 @@ public class PreferenceSystem implements Comparable<PreferenceSystem>{
 	@Override
 	public int compareTo(PreferenceSystem preferenceSystem) {
 		return computeHash().compareTo(preferenceSystem.computeHash());
+	}
+
+	public ArrayList<Group> getGroups() {
+		return groups;
+	}
+
+	public ArrayList<Agent> getAgents(int i) {
+		return groups.get(i).getAgents();
 	}
 }
