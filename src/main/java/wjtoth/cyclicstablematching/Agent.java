@@ -153,7 +153,7 @@ public class Agent {
 		return rankedOrder().toString();
 	}
 	
-	//true if < in terms of preference system
+	//true if <= in terms of preference system
 	public boolean compareTo(Agent agent) {
 		int[] agentPreferences = agent.getPreferences();
 		Set<Integer> agentUnacceptablePartners = agent.getUnacceptablePartners();
@@ -182,6 +182,6 @@ public class Agent {
 			}
 		}
 		//if all indices survived checks then they are the same
-		return false;
+		return true;
 	}
 }

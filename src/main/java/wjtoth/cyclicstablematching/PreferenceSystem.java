@@ -5,14 +5,17 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.lang.Comparable;
 
-public class PreferenceSystem {
+public class PreferenceSystem implements Comparable<PreferenceSystem>{
 
 	private ArrayList<Group> groups;
 	private int[] groupSizes;
 	
 	private boolean hasStableMatch;
 	private PerfectMatching stableMatching;
+
+	private String hash;
 	
 	//Form PerfectMatching checking
 	CrossProduct<Integer> blockers;
@@ -31,6 +34,7 @@ public class PreferenceSystem {
 			agents.add(i);
 		}
 		blockers = new CrossProduct<Integer>(agents, groups.size());
+		computeHash();
 	}
 	
 	public void setSystemGroup(int groupIndex, Group group) {
@@ -147,6 +151,10 @@ public class PreferenceSystem {
 
 	private void sufficientChecks() {
 		checkFirstChoiceCycle();
+		if(!hasStableMatch) {
+			checkFirstChoiceNineCycle();
+		}
+
 		/* These will never happen by starting symmetry
 		 * if(!hasStableMatch) {
 			checkAllSameDifferent();
@@ -170,6 +178,29 @@ public class PreferenceSystem {
 				return;
 			}
 			partnerIndex = groups.get(i).getAgents().get(partnerIndex).getFirstChoice();
+		}
+		if(agent.getIndex() == partnerIndex) {
+			hasStableMatch = true;
+		}
+	}
+
+	private void checkFirstChoiceNineCycle() {
+		for(Agent agent : groups.get(0).getAgents()) {
+			checkFirstChoiceNineCycle(agent);
+			if(hasStableMatch) {
+				break;
+			}
+		}
+	}
+
+	private void checkFirstChoiceNineCycle(Agent agent) {
+		int agentFirstChoice = agent.getFirstChoice();
+		int partnerIndex = agentFirstChoice;
+		for(int i = 1; i<3*groups.size(); ++i) {
+			if(partnerIndex == -1) {
+				return;
+			}
+			partnerIndex = groups.get(i%3).getAgents().get(partnerIndex).getFirstChoice();
 		}
 		if(agent.getIndex() == partnerIndex) {
 			hasStableMatch = true;
@@ -261,7 +292,7 @@ public class PreferenceSystem {
 	}
 	
 	public void sortPreferences() {
-		for(int i = groups.size()-1; i >= 0; --i) {
+		for(int i = 1; i < groups.size(); ++i) {
 			Group group = groups.get(i);
 			sortPreferences(group, 0, group.getGroupSize()-1);
 		}
@@ -288,7 +319,6 @@ public class PreferenceSystem {
 		return i+1;
 	}
 	private void exchange(Group group, int i, int j) {
-		System.out.println("Exchanging " + i + " and " + j + " in group " + group.getIndex());
 		ArrayList<Agent> agents = group.getAgents();
 		Agent tempAgent = agents.get(i);
 		agents.set(i, agents.get(j));
@@ -300,5 +330,28 @@ public class PreferenceSystem {
 			agent.setAgentPreference(i, preferences[j]);
 			agent.setAgentPreference(j, tempRank);
 		}
+	}
+
+	public String getHash() {
+		return hash;
+	}
+
+	public String computeHash() {
+		StringBuffer sb = new StringBuffer();
+		for(Group group : groups) {
+			for(Agent agent : group.getAgents()) {
+				int[] preferences = agent.getPreferences();
+				for(int i  = 0; i< preferences.length; ++i) {
+					sb.append(preferences[i]);
+				}
+			}
+		}
+		hash = sb.toString();
+		return hash;
+	}
+
+	@Override
+	public int compareTo(PreferenceSystem preferenceSystem) {
+		return computeHash().compareTo(preferenceSystem.computeHash());
 	}
 }

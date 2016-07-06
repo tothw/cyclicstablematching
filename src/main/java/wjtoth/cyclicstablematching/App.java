@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TreeSet;
+import java.util.Set;
 
 /**
  * Hello world!
@@ -24,7 +26,7 @@ public class App {
 		 * });
 		 */
 		List<PreferenceSystem> toCheckQueue = new LinkedList<PreferenceSystem>();
-		List<PreferenceSystem> toExtendQueue = new LinkedList<PreferenceSystem>();
+		Set<PreferenceSystem> toExtendQueue = new TreeSet<PreferenceSystem>();
 		PreferenceSystem initialPreferenceSystem = new PreferenceSystem(
 				new int[] { NUMBER_OF_AGENTS, NUMBER_OF_AGENTS, NUMBER_OF_AGENTS });
 		// priorityQueue.add(initialPreferenceSystem);
@@ -37,6 +39,10 @@ public class App {
 		while (!toCheckQueue.isEmpty() || !toExtendQueue.isEmpty()) {
 			if (toCheckQueue.isEmpty()) {
 				for (PreferenceSystem preferenceSystem : toExtendQueue) {
+					if(toCheckQueue.size() > 50000) {
+						previousSize /=2;
+						break;
+					}
 					List<PreferenceSystem> extensions = preferenceSystem.extend();
 					if (extensions.size() == 0){
 						System.out.println("Found Counter Example!");
@@ -49,6 +55,7 @@ public class App {
 			}
 			if (!toCheckQueue.isEmpty()) {
 				PreferenceSystem preferenceSystem = toCheckQueue.remove(0);
+				preferenceSystem.sortPreferences();
 				if (!preferenceSystem.hasStableMatch(crossProduct)) {
 					toExtendQueue.add(preferenceSystem);
 				}
@@ -58,6 +65,7 @@ public class App {
 					System.out.println("ExtensionQueue Size: " + toExtendQueue.size());
 					preferenceSystem.sortPreferences();
 					System.out.println(preferenceSystem);
+					System.out.println(preferenceSystem.computeHash());
 					previousSize = size;
 				}
 			}
