@@ -1,8 +1,9 @@
 package wjtoth.cyclicstablematching;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
-public class PerfectMatching {
+public class PerfectMatching implements Comparable<PerfectMatching>{
 	
 	private final int NUMBER_OF_GROUPS;
 	private final int NUMBER_OF_AGENTS;
@@ -27,7 +28,7 @@ public class PerfectMatching {
 			}catch(IndexOutOfBoundsException e) {
 				matching.add(i,match);
 			}
-		}		
+		}
 	}
 	
 	public int getPartner(int group, int agent) {
@@ -39,10 +40,14 @@ public class PerfectMatching {
 		}
 		return partner;
 	}
-	
+
+	public ArrayList<int[]> getMatching() {
+		return matching;
+	}
+
 	public String toString() {
 		StringBuffer stringBuffer = new StringBuffer();
-		stringBuffer.append("---------");
+		stringBuffer.append("---------\n");
 		for(int i = 0; i< matching.size(); ++i) {
 			int[] orderedMatch = matching.get(i);
 			stringBuffer.append("(");
@@ -53,5 +58,41 @@ public class PerfectMatching {
 		}
 		stringBuffer.append("---------");
 		return stringBuffer.toString();
+	}
+
+	public int getNUMBER_OF_GROUPS() {
+		return NUMBER_OF_GROUPS;
+	}
+
+	public int getNUMBER_OF_AGENTS() {
+		return NUMBER_OF_AGENTS;
+	}
+
+	public int compareTo(PerfectMatching perfectMatching) {
+		final int pmNumberOfGroups = perfectMatching.getNUMBER_OF_GROUPS();
+		final int pmNumberOfAgents = perfectMatching.getNUMBER_OF_AGENTS();
+		if(pmNumberOfGroups != NUMBER_OF_GROUPS) {
+			return NUMBER_OF_GROUPS-pmNumberOfGroups;
+		}else {
+			if(pmNumberOfAgents != NUMBER_OF_AGENTS) {
+				return NUMBER_OF_AGENTS - pmNumberOfAgents;
+			}else{
+				int thisValueTotal = 0;
+				int pmValueTotal = 0;
+				for(int i = 0; i< NUMBER_OF_AGENTS; ++i) {
+					int[] thisMatch = matching.get(i);
+					int[] pmMatch = perfectMatching.getMatching().get(i);
+					int thisValue = 0;
+					int pmValue = 0;
+					for(int j = 0; j< NUMBER_OF_GROUPS; ++j) {
+						thisValue = thisValue*NUMBER_OF_GROUPS + thisMatch[j];
+						pmValue = pmValue*NUMBER_OF_GROUPS + pmMatch[j];
+					}
+					thisValueTotal = thisValueTotal*NUMBER_OF_GROUPS*NUMBER_OF_AGENTS + thisValue;
+					pmValueTotal = pmValueTotal*NUMBER_OF_GROUPS*NUMBER_OF_AGENTS + pmValue;
+				}
+				return thisValueTotal-pmValueTotal;
+			}
+		}
 	}
 }

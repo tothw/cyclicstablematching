@@ -3,7 +3,6 @@ package wjtoth.cyclicstablematching;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
-import java.util.Set;
 
 /**
  * Hello world!
@@ -15,7 +14,7 @@ public class App {
 		final int NUMBER_OF_AGENTS = 5;
 		
 		List<PreferenceSystem> toCheckQueue = new LinkedList<PreferenceSystem>();
-		Set<PreferenceSystem> toExtendQueue = new TreeSet<PreferenceSystem>();
+		TreeSet<PreferenceSystem> toExtendQueue = new TreeSet<PreferenceSystem>();
 		PreferenceSystem initialPreferenceSystem = new PreferenceSystem(NUMBER_OF_GROUPS, NUMBER_OF_AGENTS);
 
 		toCheckQueue.add(initialPreferenceSystem);
@@ -26,8 +25,9 @@ public class App {
 		
 		while (!toCheckQueue.isEmpty() || !toExtendQueue.isEmpty()) {
 			if (toCheckQueue.isEmpty()) {
-				for (PreferenceSystem preferenceSystem : toExtendQueue) {
-					if(toCheckQueue.size() > 50000) {
+				while(toExtendQueue.size() > 0 ) {
+					PreferenceSystem preferenceSystem = toExtendQueue.pollFirst();
+					if(toCheckQueue.size() > 200) {
 						previousSize /=2;
 						break;
 					}
@@ -41,7 +41,6 @@ public class App {
 					}
 					toCheckQueue.addAll(extensions);
 				}
-				toExtendQueue.clear();
 			}
 			if (!toCheckQueue.isEmpty()) {
 				PreferenceSystem preferenceSystem = toCheckQueue.remove(0);

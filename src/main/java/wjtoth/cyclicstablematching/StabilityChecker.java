@@ -2,6 +2,8 @@ package wjtoth.cyclicstablematching;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class StabilityChecker {
 
@@ -14,7 +16,9 @@ public class StabilityChecker {
 	
 	//For PerfectMatching checking
 	private CrossProduct<Integer> blockers;
-	
+
+	private PerfectMatching[] matchings;
+
 	public StabilityChecker(int numberOfAgents, int numberOfGroups) {
 		ArrayList<int[]> permutations = Permutations.permutations(numberOfAgents);
 		crossProduct = new CrossProduct<int[]>(permutations, numberOfGroups);
@@ -25,6 +29,14 @@ public class StabilityChecker {
 			agents.add(i);
 		}
 		blockers = new CrossProduct<Integer>(agents, numberOfGroups);
+		Set<PerfectMatching> matchingSet = new TreeSet<PerfectMatching>();
+		while(crossProduct.hasNext()) {
+			PerfectMatching perfectMatching = new PerfectMatching(numberOfGroups, numberOfAgents);
+			perfectMatching.setMatching(crossProduct.next());
+			matchingSet.add(perfectMatching);
+		}
+		matchings = new PerfectMatching[matchingSet.size()];
+		matchingSet.toArray(matchings);
 	}
 	
 	public void setPreferenceSystem(PreferenceSystem preferenceSystem) {
@@ -36,7 +48,7 @@ public class StabilityChecker {
 		loud = false;
 		sufficientChecks();
 		if(!hasStableMatch) {
-			attemptStableMatch(crossProduct);
+			attemptStableMatch();
 		}
 		return hasStableMatch;
 	}
@@ -140,20 +152,14 @@ public class StabilityChecker {
 	}
 	
 	//assumes all groups have same size!
-	public void attemptStableMatch(CrossProduct<int[]> permutationProductIterator) {
-		permutationProductIterator.reset();
-		PerfectMatching perfectMatching = new PerfectMatching(permutationProductIterator.getDimension(),permutationProductIterator.getLength());
-		while(permutationProductIterator.hasNext()) {
-			ArrayList<int[]> permutationProduct = permutationProductIterator.next();
-			perfectMatching.setMatching(permutationProduct);
+	public void attemptStableMatch() {
+		for(PerfectMatching perfectMatching : matchings) {
 			if (isStable(perfectMatching)) {
 				hasStableMatch = true;
 				break;
 			}
 			
 		}
-		if(loud)
-			System.out.println(perfectMatching.toString());
 	}
 	
 	private boolean isStable(PerfectMatching perfectMatching) {
@@ -161,6 +167,13 @@ public class StabilityChecker {
 		while(blockers.hasNext()){
 			ArrayList<Integer> blocker = blockers.next();
 			if(isBlocking(blocker, perfectMatching)) {
+				if(loud) {
+					System.out.println("Blocking Triple: ");
+					for(Integer integer : blocker) {
+						System.out.print(integer + " ");
+					}
+					System.out.println();
+				}
 				return false;
 			}
 		}
@@ -183,7 +196,7 @@ public class StabilityChecker {
 		System.out.println("Loud: " + loud);
 		sufficientChecks();
 		if(!hasStableMatch) {
-			attemptStableMatch(crossProduct);
+			attemptStableMatch();
 		}
 		return hasStableMatch;
 	}
