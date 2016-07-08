@@ -185,7 +185,12 @@ public class PreferenceSystem implements Comparable<PreferenceSystem>{
 
 	@Override
 	public int compareTo(PreferenceSystem preferenceSystem) {
-		return computeHash().compareTo(preferenceSystem.computeHash());
+		int sizeDifference = size() - preferenceSystem.size();
+		if(sizeDifference != 0) {
+			return sizeDifference;
+		} else {
+			return computeHash().compareTo(preferenceSystem.computeHash());
+		}
 	}
 
 	public ArrayList<Group> getGroups() {
@@ -194,5 +199,13 @@ public class PreferenceSystem implements Comparable<PreferenceSystem>{
 
 	public ArrayList<Agent> getAgents(int i) {
 		return groups.get(i).getAgents();
+	}
+	
+	public int size() {
+		int retval = 0;
+		for(Group group : groups ) {
+			retval += group.sumAcceptablePartnerCount();
+		}
+		return retval;
 	}
 }

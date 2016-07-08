@@ -1,7 +1,6 @@
 package wjtoth.cyclicstablematching;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class PerfectMatching implements Comparable<PerfectMatching>{
 	
@@ -17,7 +16,7 @@ public class PerfectMatching implements Comparable<PerfectMatching>{
 		matching = new ArrayList<int[]>(numberOfGroups);
 	}
 
-	public void setMatching(ArrayList<int[]> permutationProduct) {
+	public void setMatchingFromPermutations(ArrayList<int[]> permutationProduct) {
 		for(int i =0; i<NUMBER_OF_AGENTS; ++i) {
 			int[] match = new int[NUMBER_OF_GROUPS];
 			for(int j = 0; j<NUMBER_OF_GROUPS; ++j) {
@@ -29,6 +28,10 @@ public class PerfectMatching implements Comparable<PerfectMatching>{
 				matching.add(i,match);
 			}
 		}
+	}
+	
+	public void setMatching(ArrayList<int[]> matching) {
+		this.matching = matching;
 	}
 	
 	public int getPartner(int group, int agent) {

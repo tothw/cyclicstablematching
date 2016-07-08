@@ -9,12 +9,12 @@ public class StabilityChecker {
 
 	private PreferenceSystem preferenceSystem;
 	private final CrossProduct<int[]> crossProduct;
-	
+
 	private boolean hasStableMatch;
-	
+
 	private boolean loud;
-	
-	//For PerfectMatching checking
+
+	// For PerfectMatching checking
 	private CrossProduct<Integer> blockers;
 
 	private PerfectMatching[] matchings;
@@ -25,73 +25,76 @@ public class StabilityChecker {
 		preferenceSystem = new PreferenceSystem(numberOfGroups, numberOfAgents);
 		hasStableMatch = false;
 		ArrayList<Integer> agents = new ArrayList<Integer>();
-		for(int i = 0; i<numberOfAgents; ++i) {
+		for (int i = 0; i < numberOfAgents; ++i) {
 			agents.add(i);
 		}
 		blockers = new CrossProduct<Integer>(agents, numberOfGroups);
 		Set<PerfectMatching> matchingSet = new TreeSet<PerfectMatching>();
-		while(crossProduct.hasNext()) {
+		while (crossProduct.hasNext()) {
 			PerfectMatching perfectMatching = new PerfectMatching(numberOfGroups, numberOfAgents);
-			perfectMatching.setMatching(crossProduct.next());
+			perfectMatching.setMatchingFromPermutations(crossProduct.next());
 			matchingSet.add(perfectMatching);
 		}
 		matchings = new PerfectMatching[matchingSet.size()];
 		matchingSet.toArray(matchings);
 	}
-	
+
 	public void setPreferenceSystem(PreferenceSystem preferenceSystem) {
 		this.preferenceSystem = preferenceSystem;
 		hasStableMatch = false;
 	}
-	
+
 	public boolean hasStableMatch() {
 		loud = false;
 		sufficientChecks();
-		if(!hasStableMatch) {
+		if (!hasStableMatch) {
 			attemptStableMatch();
+		}
+		if (loud) {
+			System.out.println("Has Stable: " + hasStableMatch);
 		}
 		return hasStableMatch;
 	}
 
 	private void sufficientChecks() {
 		checkFirstChoiceCycle();
-		if(!hasStableMatch) {
+		if (!hasStableMatch) {
 			checkFirstChoiceNineCycle();
 		}
 
-		/* These will never happen by starting symmetry
-		 * if(!hasStableMatch) {
-			checkAllSameDifferent();
-		}*/
+		/*
+		 * These will never happen by starting symmetry if(!hasStableMatch) {
+		 * checkAllSameDifferent(); }
+		 */
 	}
-	
+
 	private void checkFirstChoiceCycle() {
-		for(Agent agent : preferenceSystem.getAgents(0)) {
+		for (Agent agent : preferenceSystem.getAgents(0)) {
 			checkFirstChoiceCycle(agent);
-			if(hasStableMatch) {
+			if (hasStableMatch) {
 				break;
 			}
 		}
 	}
-	
+
 	private void checkFirstChoiceCycle(Agent agent) {
 		int agentFirstChoice = agent.getFirstChoice();
 		int partnerIndex = agentFirstChoice;
-		for(int i = 1; i<preferenceSystem.getGroups().size(); ++i) {
-			if(partnerIndex == -1) {
+		for (int i = 1; i < preferenceSystem.getGroups().size(); ++i) {
+			if (partnerIndex == -1) {
 				return;
 			}
 			partnerIndex = preferenceSystem.getAgents(i).get(partnerIndex).getFirstChoice();
 		}
-		if(agent.getIndex() == partnerIndex) {
+		if (agent.getIndex() == partnerIndex) {
 			hasStableMatch = true;
 		}
 	}
 
 	private void checkFirstChoiceNineCycle() {
-		for(Agent agent : preferenceSystem.getAgents(0)) {
+		for (Agent agent : preferenceSystem.getAgents(0)) {
 			checkFirstChoiceNineCycle(agent);
-			if(hasStableMatch) {
+			if (hasStableMatch) {
 				break;
 			}
 		}
@@ -100,102 +103,133 @@ public class StabilityChecker {
 	private void checkFirstChoiceNineCycle(Agent agent) {
 		int agentFirstChoice = agent.getFirstChoice();
 		int partnerIndex = agentFirstChoice;
-		for(int i = 1; i<3*preferenceSystem.getGroups().size(); ++i) {
-			if(partnerIndex == -1) {
+		for (int i = 1; i < 3 * preferenceSystem.getGroups().size(); ++i) {
+			if (partnerIndex == -1) {
 				return;
 			}
-			partnerIndex = preferenceSystem.getAgents(i%3).get(partnerIndex).getFirstChoice();
+			partnerIndex = preferenceSystem.getAgents(i % 3).get(partnerIndex).getFirstChoice();
 		}
-		if(agent.getIndex() == partnerIndex) {
+		if (agent.getIndex() == partnerIndex) {
 			hasStableMatch = true;
 		}
 	}
-	
+
 	@SuppressWarnings("unused")
 	private void checkAllSameDifferent() {
-		for(Group group : preferenceSystem.getGroups()) {
+		for (Group group : preferenceSystem.getGroups()) {
 			checkAllSameDifferent(group);
 		}
 	}
-	
+
 	private void checkAllSameDifferent(Group group) {
-		int[] firstChoices  = new int[group.getGroupSize()];
-		for(int i = 0; i<firstChoices.length; ++i) {
+		int[] firstChoices = new int[group.getGroupSize()];
+		for (int i = 0; i < firstChoices.length; ++i) {
 			firstChoices[i] = group.getAgents().get(i).getFirstChoice();
 		}
-		//check all -1
+		// check all -1
 		boolean negativeOneChoices = true;
-		for(int i = 0; i<firstChoices.length; ++i) {
+		for (int i = 0; i < firstChoices.length; ++i) {
 			negativeOneChoices = negativeOneChoices && firstChoices[i] == -1;
 		}
-		if(negativeOneChoices = true) {
+		if (negativeOneChoices = true) {
 			return;
 		}
-		if(firstChoices.length == 1) {
-			if(firstChoices[0] != -1){
+		if (firstChoices.length == 1) {
+			if (firstChoices[0] != -1) {
 				hasStableMatch = true;
 			}
 			return;
 		}
 		Arrays.sort(firstChoices);
-		System.out.println("First Choices: " + Arrays.toString(firstChoices));
-		if(firstChoices[0] == 0 && firstChoices[firstChoices.length-1] == firstChoices.length-1) {
+		if (loud) {
+			System.out.println("First Choices: " + Arrays.toString(firstChoices));
+		}
+		if (firstChoices[0] == 0 && firstChoices[firstChoices.length - 1] == firstChoices.length - 1) {
 			hasStableMatch = true;
-			System.out.println("All Different");
+			if (loud) {
+				System.out.println("All Different");
+			}
 			return;
 		}
 		int choice = firstChoices[0];
-		if(firstChoices[firstChoices.length - 1] == choice) {
+		if (firstChoices[firstChoices.length - 1] == choice) {
 			hasStableMatch = true;
-			System.out.println("All Same");
+			if (loud) {
+				System.out.println("All Same");
+			}
 		}
 	}
-	
-	//assumes all groups have same size!
+
+	// assumes all groups have same size!
 	public void attemptStableMatch() {
-		for(PerfectMatching perfectMatching : matchings) {
-			if (isStable(perfectMatching)) {
+		for (PerfectMatching perfectMatching : matchings) {
+			if (loud) {
+				System.out.println(perfectMatching);
+			}
+			if (isComplete(perfectMatching) && isStable(perfectMatching)) {
 				hasStableMatch = true;
 				break;
 			}
-			
+
 		}
 	}
-	
-	private boolean isStable(PerfectMatching perfectMatching) {
+
+	private boolean isComplete(PerfectMatching perfectMatching) {
+		for (int[] match : perfectMatching.getMatching()) {
+			if (!isAcceptable(match)) {
+				if (loud) {
+					System.out.println("Not complete");
+				}
+				return false;
+			}
+		}
+		if (loud) {
+			System.out.println("Complete");
+		}
+		return true;
+	}
+
+	private boolean isAcceptable(int[] match) {
+		for (int i = 0; i < match.length; ++i) {
+			int agentIndex = match[i];
+			int matchPartner = match[(i + 1) % match.length];
+			if (preferenceSystem.getAgents(i).get(agentIndex).getUnacceptablePartners().contains(matchPartner)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public boolean isStable(PerfectMatching perfectMatching) {
 		blockers.reset();
-		while(blockers.hasNext()){
+		while (blockers.hasNext()) {
 			ArrayList<Integer> blocker = blockers.next();
-			if(isBlocking(blocker, perfectMatching)) {
-				if(loud) {
-					System.out.println("Blocking Triple: ");
-					for(Integer integer : blocker) {
-						System.out.print(integer + " ");
-					}
-					System.out.println();
+			if (isBlocking(blocker, perfectMatching)) {
+				if (loud) {
+					System.out.println("Is Blocking");
 				}
 				return false;
 			}
 		}
 		return true;
 	}
-	
+
 	private boolean isBlocking(ArrayList<Integer> blocker, PerfectMatching perfectMatching) {
 		boolean retval = true;
-		for(int i = 0; i<blocker.size(); ++i) {
+		for (int i = 0; i < blocker.size(); ++i) {
 			int agentIndex = blocker.get(i);
-			int blockPartner = blocker.get((i+1)%blocker.size());
+			int blockPartner = blocker.get((i + 1) % blocker.size());
 			int matchPartner = perfectMatching.getPartner(i, agentIndex);
-			retval = retval && !preferenceSystem.getAgents(i).get(agentIndex).prefers(blockPartner, matchPartner);
+			retval = retval && preferenceSystem.getAgents(i).get(agentIndex).prefers(blockPartner, matchPartner);
 		}
 		return retval;
 	}
-	
+
 	public boolean loudHasStableMatch() {
 		loud = true;
 		System.out.println("Loud: " + loud);
 		sufficientChecks();
-		if(!hasStableMatch) {
+		if (!hasStableMatch) {
 			attemptStableMatch();
 		}
 		return hasStableMatch;

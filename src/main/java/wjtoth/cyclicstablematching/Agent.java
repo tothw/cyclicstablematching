@@ -71,8 +71,12 @@ public class Agent {
 	
 	//true if prefers 1 to 2
 	public boolean prefers(int agentIndex1, int agentIndex2) {
-		if(agentIndex2 < 0) {
-			return false;
+		if(unacceptablePartners.contains(agentIndex2)) {
+			if(unacceptablePartners.contains(agentIndex1)) {
+				return false;
+			} else {
+				return true;
+			}
 		}
 		return preferences[agentIndex1] > preferences[agentIndex2];
 	}
