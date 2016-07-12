@@ -208,4 +208,12 @@ public class PreferenceSystem implements Comparable<PreferenceSystem>{
 		}
 		return retval;
 	}
+
+	public int getNumberOfGroups() {
+		return groups.size();
+	}
+
+	public int getNumberOfAgents() {
+		return groupSizes[0];
+	}
 }
