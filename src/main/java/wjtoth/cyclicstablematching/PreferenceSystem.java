@@ -61,6 +61,9 @@ public class PreferenceSystem implements Comparable<PreferenceSystem>{
 			newSystems.add(this.deepCopy());
 			extender.remove(unacceptablePartner);
 		}
+		for(PreferenceSystem preferenceSystem : newSystems) {
+			preferenceSystem.sortPreferences();
+		}
 		return newSystems;
 	}
 	

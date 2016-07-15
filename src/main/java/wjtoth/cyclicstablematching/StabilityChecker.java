@@ -37,6 +37,7 @@ public class StabilityChecker {
 		}
 		matchings = new PerfectMatching[matchingSet.size()];
 		matchingSet.toArray(matchings);
+		loud = false;
 	}
 
 	public void setPreferenceSystem(PreferenceSystem preferenceSystem) {
@@ -47,7 +48,7 @@ public class StabilityChecker {
 	public boolean hasStableMatch() {
 		loud = false;
 		sufficientChecks();
-		if (!hasStableMatch) {
+		if (!hasStableMatch && preferenceSystem.size() % (preferenceSystem.getNumberOfAgents() * preferenceSystem.getNumberOfGroups()) == 0) {
 			attemptStableMatch();
 		}
 		if (loud) {

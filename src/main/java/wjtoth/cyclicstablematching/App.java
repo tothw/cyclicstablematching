@@ -10,6 +10,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.Scanner;
+import java.util.Set;
 
 /**
  * Hello world!
@@ -103,25 +104,28 @@ public class App {
 		System.out.println("Done constructing Stability Checker");
 
 		int sizeCount = 0;
-		
+
 		while (!toCheckQueue.isEmpty() || !toExtendQueue.isEmpty()) {
 			if (toCheckQueue.isEmpty()) {
-				System.out.println("Extending");
-				while (toExtendQueue.size() > 0) {
-					List<List<PreferenceSystem>> systemsToCheck = extendInputs(toExtendQueue);
-					for(List<PreferenceSystem> toCheckList : systemsToCheck) {
-						toCheckQueue.addAll(toCheckList);
+				System.out.println("Extending " + toExtendQueue.size() + " systems");
+				int previousSize = NUMBER_OF_AGENTS*NUMBER_OF_AGENTS*NUMBER_OF_GROUPS + 1;
+				while (!toExtendQueue.isEmpty() && toCheckQueue.size() < 2000) {
+					PreferenceSystem preferenceSystem = toExtendQueue.remove(0);
+					if(preferenceSystem.size() > previousSize) {
+						toExtendQueue.add(preferenceSystem);
+						break;
 					}
+					previousSize = preferenceSystem.size();
+					toCheckQueue.add(preferenceSystem);
 				}
-				System.out.println("Done Extending");
+				System.out.println("Done Extending: " + toExtendQueue.size() + " remain");
 			}
 			if (!toCheckQueue.isEmpty()) {
-				System.out.println("Processing Inputs");
+				System.out.println("Processing " + toCheckQueue.size() + " Inputs");
 				List<List<PreferenceSystem>> extensions = processInputs(toCheckQueue, stabilityChecker);
 				for (List<PreferenceSystem> extension : extensions) {
-					if(!extension.isEmpty() && extension.get(0).size() >= NUMBER_OF_AGENTS*sizeCount) {
-						System.out.println("toCheckQueue size: " + toCheckQueue.size());
-						System.out.println("toExtendQueue size: " + toExtendQueue.size());
+					if (!extension.isEmpty() && extension.get(0).size() >= sizeCount) {
+						System.out.println("Extensions size: " + extensions.size());
 						System.out.println(extension.get(0));
 						System.out.println(extension.get(0).computeHash());
 						++sizeCount;
@@ -164,48 +168,12 @@ public class App {
 		return outputs;
 	}
 
-	/*
-	 * *Method to Parallelize Computation
-	 */
-	public static List<List<PreferenceSystem>> extendInputs(List<PreferenceSystem> inputs)
-			throws InterruptedException, ExecutionException {
-
-		System.out.println("ProcessingInputs");
-
-		int threads = Runtime.getRuntime().availableProcessors();
-		ExecutorService service = Executors.newFixedThreadPool(threads);
-
-		List<Future<List<PreferenceSystem>>> futures = new ArrayList<Future<List<PreferenceSystem>>>();
-		for (final PreferenceSystem input : inputs) {
-			Callable<List<PreferenceSystem>> callable = new Callable<List<PreferenceSystem>>() {
-				public List<PreferenceSystem> call() throws Exception {
-					List<PreferenceSystem> output = extendPreferenceSystem(input);
-					return output;
-				}
-			};
-			futures.add(service.submit(callable));
-		}
-
-		service.shutdown();
-
-		List<List<PreferenceSystem>> outputs = new ArrayList<List<PreferenceSystem>>();
-		for (Future<List<PreferenceSystem>> future : futures) {
-			outputs.add(future.get());
-		}
-		inputs.clear();
-		return outputs;
-	}
-
-	private static List<PreferenceSystem> extendPreferenceSystem(PreferenceSystem preferenceSystem) {
-		return preferenceSystem.extend();
-	}
-
 	private static List<PreferenceSystem> processPreferenceSystem(PreferenceSystem preferenceSystem,
 			StabilityChecker stabilityChecker) {
 		// preferenceSystem.sortPreferences();
 		stabilityChecker.setPreferenceSystem(preferenceSystem);
 		if (!stabilityChecker.hasStableMatch()) {
-			if (preferenceSystem.size() == preferenceSystem.getNumberOfGroups()
+			if (preferenceSystem.size() == preferenceSystem.getNumberOfGroups() * preferenceSystem.getNumberOfAgents()
 					* preferenceSystem.getNumberOfAgents()) {
 				System.out.println("Found Counter Example!");
 				stabilityChecker.setPreferenceSystem(preferenceSystem);
