@@ -53,6 +53,9 @@ public class App {
 			preferenceSystem.setSystemGroup(i, group);
 		}
 		System.out.println(preferenceSystem);
+		preferenceSystem.sortPreferences();
+		System.out.println("Sorted");
+		System.out.println(preferenceSystem);
 		System.out.println("Matchings to check (input -1 to check all possible):");
 		int numMatchingsToCheck = scanner.nextInt();
 		System.out.println("Read in matchingsToCheck: " + numMatchingsToCheck);
@@ -109,7 +112,12 @@ public class App {
 			if (toCheckQueue.isEmpty()) {
 				System.out.println("Extending " + toExtendQueue.size() + " systems");
 				int previousSize = NUMBER_OF_AGENTS*NUMBER_OF_AGENTS*NUMBER_OF_GROUPS + 1;
-				while (!toExtendQueue.isEmpty() && toCheckQueue.size() < 2000) {
+				if(!toExtendQueue.isEmpty()) {
+					if(toExtendQueue.get(0).size() % NUMBER_OF_AGENTS*NUMBER_OF_GROUPS == 0) {
+						toExtendQueue = filterSymmetries(toExtendQueue);
+					}
+				}
+				while (!toExtendQueue.isEmpty()) {
 					PreferenceSystem preferenceSystem = toExtendQueue.remove(0);
 					if(preferenceSystem.size() > previousSize) {
 						toExtendQueue.add(preferenceSystem);
@@ -185,5 +193,17 @@ public class App {
 		}
 
 		return new ArrayList<PreferenceSystem>();
+	}
+
+	private static List<PreferenceSystem> filterSymmetries(List<PreferenceSystem> queue) {
+		System.out.println("Filtering Symmetries");
+		int initalSize = queue.size();
+		System.out.println("Initial Size: " + initalSize);
+		Set<PreferenceSystem> filterSet = new TreeSet<PreferenceSystem>();
+		for(PreferenceSystem preferenceSystem: queue) {
+			filterSet.add(preferenceSystem);
+		}
+		System.out.println("Final Size: " + filterSet.size());
+		return new ArrayList<PreferenceSystem>(filterSet);
 	}
 }

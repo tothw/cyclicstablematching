@@ -62,7 +62,11 @@ public class PreferenceSystem implements Comparable<PreferenceSystem>{
 			extender.remove(unacceptablePartner);
 		}
 		for(PreferenceSystem preferenceSystem : newSystems) {
+			System.out.println("----------------------------");
+			System.out.println(preferenceSystem);
 			preferenceSystem.sortPreferences();
+			System.out.println(preferenceSystem);
+			System.out.println("----------------------------");
 		}
 		return newSystems;
 	}

@@ -55,5 +55,42 @@ for all $v \in A \cup B \cup C$. For each $a \in A$ we define $M(a) = b$ such th
 We call a matching stable if there does not exist a triple $(a,b,c) \in A \times B \times C$ such that 
 $$ b >_a M(a) \quad\text{and}\quad c >_b M(b) \quad\text{and}\quad a>_c M(c).$$
 Herein we adopt the convention that any element is preferable to $0$ in any ordering. It is conjectured  by Knuth that a stable matching exists for any instance of the cyclic stable matching problem. It is known that this result holds for $n \leq 4$. We propose a computational search strategy to decide if the conjecture holds for higher $n$, say $n=5$.
-\section{}
+\section{General Strategy}
+\paragraph{}
+The goal of the computational search is essentially smart brute force. We aim to test all instances of the problem (which we will refer to as Preference Systems) for $n=5$. Brief calculations can show that simply enumerating all Preference Systems would be infeasible, so we have devised a strategy to reduce the number of systems we need to check. The idea stems from the fact that if we relax the total orders to partial orders and if we can find a stable perefect matching $M$ on a partial ordered preference system then any total order instance that arise by extending the partial order (appending unordered agents to end of preference lists) has $M$ as a stable matching. 
+\paragraph{}
+Another idea we use is to develop sufficient conditions that tell us if a system will have a stable matching without actually finding it For instance if there is a $3$-cycle of first choice preferences, then we have a stable matching by induction.
+\paragraph{}
+We also observe that there is inherent symmetry in the problem instances. If one instance can be obtained from another by permuting the roles of sets $A,B,C$ then clearly if one has a Stable matching the other does (by permuting the $A$,$B$,$C$ entries of the matching). Another symmetry comes from relabelling within a set $A, B, C$. If you have a problem instance $A,B,C$ and you have a bijection
+$$\phi: A \rightarrow A.$$
+Then for all $c \in C$ define the total order $>_c^\phi$ to be
+$$\{(\phi(a_1),\phi(a_2)) : a_1 >_c a_2 \}.$$
+If the bijection $\phi$ satisfies
+$$a_1 >_c a_2 \implies \phi(a_1) >^\phi_c \phi(a_2)$$
+for all $c \in C$, then the problem instances given by $A,B,C$ with original orders and $\phi(A), B, C$ with each $c\in C$ using order $>_c^\phi$ are symmetric in the sense that a stable matching for one implies a stable matching for the other (and finding second stable matching is given through applying $\phi$ to first stable matching). 
+\paragraph{}
+Our general algorithm is as follows
+\begin{enumerate}
+\item Initialize a preference system of size $n=5$ with empty partial orders
+\item Create a queue of preference systems $Q$. Add inital system to $Q$.
+\item While $Q \neq \emptyset$
+\begin{enumerate}
+\item Let $P$ be preference system at head of $Q$. Remove $P$ from $Q$.
+\item Test if $P$ is satisfies a sufficient condition for stable matching.
+\item If not, enumerate all matchings and test if one is a complete stable matching for $P$
+\item If both tests fail then extend preference list of one agent in $P$ with shortest length list in all possible ways. Call the set of extensions $\cP$.
+\item If $\cP = \emptyset$ then $P$ is a counterexample.
+\item Add all $P' \in \cP$ not symmetric to a system in $Q$ to $Q$.
+\end{enumerate}
+\item If no counterexample is found then conjecture holds for $n=5$.
+\end{enumerate}
+\section{Sufficient Checks}
+\paragraph{}
+We use the following sufficient conditions to decide if a preference system has a Stable Matching before enumerating possible matchings:
+\begin{itemize}
+\item Existence of a set $V \in \{A,B,C\}$ where each agent in $V$ has the same first choice.
+\item Existence of a set $V \in \{A,B,C\}$ where each agent in $V$ has a different first choice.
+\item Existence of a triple $(a,b,c) \in A\times B\times C$ where $b$ is first choice of $a$, $c$ is first choice of $b$, and $a$ is first choice of $c$. We call this a first choice $3$-cycle.
+\item Existence of a first choice $9$-cycle.
+\end{itemize}
 \end{document}
