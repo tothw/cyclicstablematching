@@ -56,15 +56,17 @@ public class PreferenceSystem implements Comparable<PreferenceSystem>{
 		Integer[] unacceptablePartnerArray = new Integer[unacceptablePartners.size()];
 		unacceptablePartners.toArray(unacceptablePartnerArray);
 		for(int unacceptablePartner : unacceptablePartnerArray) {
-			//set
-			extender.append(unacceptablePartner);
-			newSystems.add(this.deepCopy());
-			extender.remove(unacceptablePartner);
-		}
-		for(PreferenceSystem preferenceSystem : newSystems) {
-			preferenceSystem.sortPreferences();
+			newSystems.add(extend(extender, unacceptablePartner));
 		}
 		return newSystems;
+	}
+	
+	public PreferenceSystem extend(Agent extender, int unacceptablePartner) {
+		extender.append(unacceptablePartner);
+		PreferenceSystem newSystem = this.deepCopy();
+		extender.remove(unacceptablePartner);
+		newSystem.sortPreferences();
+		return newSystem;
 	}
 	
 	public Collection<Integer> filterUnacceptablePartners(Agent agent) {
@@ -104,7 +106,7 @@ public class PreferenceSystem implements Comparable<PreferenceSystem>{
 				|| agent.getIndex() == 1 && agent.getGroupIndex() == 2;
 	}
 	
-	private Agent getExtender() {
+	public Agent getExtender() {
 		Agent extender = groups.get(0).shortestAgent();
 		int groupLength = groups.get(0).sumAcceptablePartnerCount();
 		for(int i = 1; i < groups.size(); ++i) {

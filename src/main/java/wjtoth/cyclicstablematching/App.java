@@ -29,7 +29,7 @@ public class App {
 			checkSystem(scanner);
 		} else {
 			System.out.println("Performing Search");
-			spaceSearch(NUMBER_OF_GROUPS, NUMBER_OF_AGENTS);
+			depthFirstSearch(NUMBER_OF_GROUPS, NUMBER_OF_AGENTS);
 		}
 
 	}
@@ -205,5 +205,38 @@ public class App {
 		}
 		System.out.println("Final Size: " + filterSet.size());
 		return new ArrayList<PreferenceSystem>(filterSet);
+	}
+	
+	public static void depthFirstSearch(final int NUMBER_OF_GROUPS, final int NUMBER_OF_AGENTS) {
+		PreferenceSystem initialPreferenceSystem = new PreferenceSystem(NUMBER_OF_GROUPS, NUMBER_OF_AGENTS);
+		PreferenceSystemNode root = new PreferenceSystemNode(initialPreferenceSystem, null);
+		PreferenceSystemNode preferenceSystemNode = root;
+		
+		System.out.println("Constructing Stablility Checker");
+		StabilityChecker stabilityChecker = new StabilityChecker(NUMBER_OF_AGENTS, NUMBER_OF_GROUPS);
+		System.out.println("Done Constructing Stability Checker");
+		int previousSize = 0;
+		while(preferenceSystemNode.hasNext()) {
+			PreferenceSystem data = preferenceSystemNode.getData();
+			if(data.size() >= previousSize) {
+				System.out.println(data);
+				System.out.println("System size: " + data.size());
+				++previousSize;
+			}
+			stabilityChecker.setPreferenceSystem(data);
+			if(stabilityChecker.hasStableMatch()) {
+				preferenceSystemNode = preferenceSystemNode.getParent();
+			} else {
+				if(data.size() == NUMBER_OF_AGENTS*NUMBER_OF_AGENTS*NUMBER_OF_GROUPS) {
+					System.out.println("Found Counterexample");
+					System.out.println(data);
+					break;
+				}
+				preferenceSystemNode = preferenceSystemNode.getNext();
+			}
+			
+		}
+		System.out.println("Done!");
+		System.out.println(preferenceSystemNode.getData());
 	}
 }
