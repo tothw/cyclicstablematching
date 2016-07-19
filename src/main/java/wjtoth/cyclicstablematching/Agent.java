@@ -166,21 +166,21 @@ public class Agent {
 			boolean agentContainsI = agentUnacceptablePartners.contains(i);
 			//if i unacceptable to this but not agent
 			if(containsI && !agentContainsI) {
-				return true;
+				return false;
 			}
 			//if i acceptable to this but not agent
 			if(!containsI && agentContainsI) {
-				return false;
+				return true;
 			}
 			//if acceptable to both
 			if(!(containsI || agentContainsI)){
-				//return true if strictly less than
+				//return false if strictly less than
 				if(preferences[i] < agentPreferences[i]) {
-					return true;
-				}
-				//return false if strictly greater than
-				if(preferences[i] > agentPreferences[i]) {
 					return false;
+				}
+				//return true if strictly greater than
+				if(preferences[i] > agentPreferences[i]) {
+					return true;
 				}
 				//check next index if equal
 			}

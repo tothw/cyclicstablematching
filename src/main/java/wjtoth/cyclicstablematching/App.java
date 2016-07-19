@@ -113,7 +113,7 @@ public class App {
 				System.out.println("Extending " + toExtendQueue.size() + " systems");
 				int previousSize = NUMBER_OF_AGENTS*NUMBER_OF_AGENTS*NUMBER_OF_GROUPS + 1;
 				if(!toExtendQueue.isEmpty()) {
-					if(toExtendQueue.get(0).size() % NUMBER_OF_AGENTS*NUMBER_OF_GROUPS == 0) {
+					if(toExtendQueue.get(0).size() % NUMBER_OF_AGENTS*NUMBER_OF_GROUPS == 0 || true) {
 						toExtendQueue = filterSymmetries(toExtendQueue);
 					}
 				}
