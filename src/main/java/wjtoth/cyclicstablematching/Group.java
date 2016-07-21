@@ -35,7 +35,8 @@ public class Group {
 		agents = new ArrayList<Agent>(groupSize);
 		for(int i = 0; i<groupSize; ++i) {
 			Agent agent = new Agent(partnerGroupSize, i, index);
-			if(i == 0 && (index == 0 || index == 1)) {
+			//testing something
+			if(i == 0 && (index == 0 || index == 1) && false) {
 				agent.append(1);
 			}
 			agents.add(agent);

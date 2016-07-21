@@ -46,6 +46,7 @@ public class StabilityChecker {
 	}
 
 	public boolean hasStableMatch() {
+		hasStableMatch = false;
 		loud = false;
 		sufficientChecks();
 		if (!hasStableMatch && preferenceSystem.size() % (preferenceSystem.getNumberOfAgents() * preferenceSystem.getNumberOfGroups()) == 0) {
@@ -62,7 +63,9 @@ public class StabilityChecker {
 		if (!hasStableMatch) {
 			checkFirstChoiceNineCycle();
 		}
-
+		if(hasStableMatch) {
+			System.out.println("SUFFIFICIENT");
+		}
 		/*
 		 * These will never happen by starting symmetry if(!hasStableMatch) {
 		 * checkAllSameDifferent(); }

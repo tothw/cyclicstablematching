@@ -237,6 +237,5 @@ public class App {
 			
 		}
 		System.out.println("Done!");
-		System.out.println(preferenceSystemNode.getData());
 	}
 }

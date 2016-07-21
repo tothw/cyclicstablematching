@@ -65,11 +65,15 @@ public class PreferenceSystem implements Comparable<PreferenceSystem>{
 		extender.append(unacceptablePartner);
 		PreferenceSystem newSystem = this.deepCopy();
 		extender.remove(unacceptablePartner);
-		newSystem.sortPreferences();
 		return newSystem;
 	}
 	
 	public Collection<Integer> filterUnacceptablePartners(Agent agent) {
+		//testing something
+		if(true) {
+			return agent.getUnacceptablePartners();
+		}
+		
 		if(agent.getAcceptablePartnerCount() == 0) {
 			ArrayList<Integer> retval = new ArrayList<Integer>();
 			Set<Integer> unacceptablePartners = agent.getUnacceptablePartners();
