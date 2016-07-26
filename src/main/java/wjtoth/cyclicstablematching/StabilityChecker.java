@@ -63,9 +63,6 @@ public class StabilityChecker {
 		if (!hasStableMatch) {
 			checkFirstChoiceNineCycle();
 		}
-		if(hasStableMatch) {
-			System.out.println("SUFFIFICIENT");
-		}
 		/*
 		 * These will never happen by starting symmetry if(!hasStableMatch) {
 		 * checkAllSameDifferent(); }
