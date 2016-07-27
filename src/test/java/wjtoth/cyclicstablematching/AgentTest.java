@@ -46,5 +46,14 @@ public class AgentTest
         assertTrue(rankedOrder.toString().equals("[2, 1, 0]"));
         testAgent.setAgentPreference(0,4);
         assertFalse(testAgent.prefers(1, 0));
+
+        Agent testAgent2 = new Agent(3,0,0);
+        int[] preferences2 = {2,1,3};
+        testAgent2.setPreferences(preferences2);
+
+        assertTrue(testAgent.compareTo(testAgent2));
+        assertFalse(testAgent2.compareTo(testAgent));
+
+        assertTrue((testAgent.compareTo(testAgent.deepCopy())) &&testAgent.deepCopy().compareTo(testAgent));
     }
 }
