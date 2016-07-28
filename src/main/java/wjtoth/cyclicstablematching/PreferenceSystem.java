@@ -116,7 +116,7 @@ public class PreferenceSystem implements Comparable<PreferenceSystem>{
 		for(int i = 1; i < groups.size(); ++i) {
 			Agent candidate = groups.get(i).shortestAgent();
 			int candidateGroupLength = groups.get(i).sumAcceptablePartnerCount();
-			if(candidate.getAcceptablePartnerCount() <= extender.getAcceptablePartnerCount() && candidateGroupLength <= groupLength) {
+			if(candidate.getAcceptablePartnerCount() < extender.getAcceptablePartnerCount() && candidateGroupLength < groupLength) {
 				extender = candidate;
 				groupLength = candidateGroupLength;
 			}
@@ -133,11 +133,13 @@ public class PreferenceSystem implements Comparable<PreferenceSystem>{
 		return sb.toString();
 	}
 	
-	public void sortPreferences() {
+	public void sortPreferences() {/**
 		for(int i = groups.size()-1; i >=0; --i) {
 			Group group = groups.get(i);
 			sortPreferences(group, 0, group.getGroupSize()-1);
-		}
+		}**/
+		//Weaker sort
+		sortPreferences(groups.get(0), 0, groups.get(0).getGroupSize()-1);
 	}
 	
 	private void sortPreferences(Group group, int p, int r) {
@@ -181,12 +183,7 @@ public class PreferenceSystem implements Comparable<PreferenceSystem>{
 	public String computeHash() {
 		StringBuffer sb = new StringBuffer();
 		for(Group group : groups) {
-			for(Agent agent : group.getAgents()) {
-				int[] preferences = agent.getPreferences();
-				for(int i  = 0; i< preferences.length; ++i) {
-					sb.append(preferences[i]);
-				}
-			}
+			sb.append(group.computeHash());
 		}
 		hash = sb.toString();
 		return hash;

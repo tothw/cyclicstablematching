@@ -111,15 +111,15 @@ public class App {
 		while (!toCheckQueue.isEmpty() || !toExtendQueue.isEmpty()) {
 			if (toCheckQueue.isEmpty()) {
 				System.out.println("Extending " + toExtendQueue.size() + " systems");
-				int previousSize = NUMBER_OF_AGENTS*NUMBER_OF_AGENTS*NUMBER_OF_GROUPS + 1;
-				if(!toExtendQueue.isEmpty()) {
-					if(toExtendQueue.get(0).size() % NUMBER_OF_AGENTS*NUMBER_OF_GROUPS == 0 || true) {
+				int previousSize = NUMBER_OF_AGENTS * NUMBER_OF_AGENTS * NUMBER_OF_GROUPS + 1;
+				if (!toExtendQueue.isEmpty()) {
+					if (toExtendQueue.get(0).size() % NUMBER_OF_AGENTS * NUMBER_OF_GROUPS == 0 || true) {
 						toExtendQueue = filterSymmetries(toExtendQueue);
 					}
 				}
 				while (!toExtendQueue.isEmpty()) {
 					PreferenceSystem preferenceSystem = toExtendQueue.remove(0);
-					if(preferenceSystem.size() > previousSize) {
+					if (preferenceSystem.size() > previousSize) {
 						toExtendQueue.add(preferenceSystem);
 						break;
 					}
@@ -200,41 +200,53 @@ public class App {
 		int initalSize = queue.size();
 		System.out.println("Initial Size: " + initalSize);
 		Set<PreferenceSystem> filterSet = new TreeSet<PreferenceSystem>();
-		for(PreferenceSystem preferenceSystem: queue) {
+		for (PreferenceSystem preferenceSystem : queue) {
 			filterSet.add(preferenceSystem);
 		}
 		System.out.println("Final Size: " + filterSet.size());
 		return new ArrayList<PreferenceSystem>(filterSet);
 	}
-	
+
 	public static void depthFirstSearch(final int NUMBER_OF_GROUPS, final int NUMBER_OF_AGENTS) {
 		PreferenceSystem initialPreferenceSystem = new PreferenceSystem(NUMBER_OF_GROUPS, NUMBER_OF_AGENTS);
 		PreferenceSystemNode root = new PreferenceSystemNode(initialPreferenceSystem, null);
 		PreferenceSystemNode preferenceSystemNode = root;
-		
+
 		System.out.println("Constructing Stablility Checker");
 		StabilityChecker stabilityChecker = new StabilityChecker(NUMBER_OF_AGENTS, NUMBER_OF_GROUPS);
 		System.out.println("Done Constructing Stability Checker");
 		int previousSize = 0;
-		while(preferenceSystemNode.hasNext()) {
+		while (preferenceSystemNode != null && preferenceSystemNode.hasNext()) {
 			PreferenceSystem data = preferenceSystemNode.getData();
-			if(data.size() >= previousSize) {
+			if (data.size() % NUMBER_OF_AGENTS * NUMBER_OF_GROUPS == 0 && data.size() < previousSize) {
 				System.out.println(data);
 				System.out.println("System size: " + data.size());
+			}
+			if (data.size() >= previousSize) {
+				System.out.println(data);
+				System.out.println("System size: " + data.size());
+				System.out.println();
 				++previousSize;
 			}
 			stabilityChecker.setPreferenceSystem(data);
-			if(stabilityChecker.hasStableMatch()) {
+			if (stabilityChecker.hasStableMatch()) {
+				if (data.size() < 75) {
+					System.out.println("Eliminated Node at depth: " + data.size() + " by sufficient stability");
+					System.out.println("Progress\n" + data);
+				}
 				preferenceSystemNode = preferenceSystemNode.getParent();
 			} else {
-				if(data.size() == NUMBER_OF_AGENTS*NUMBER_OF_AGENTS*NUMBER_OF_GROUPS) {
+				if (data.size() == NUMBER_OF_AGENTS * NUMBER_OF_AGENTS * NUMBER_OF_GROUPS) {
 					System.out.println("Found Counterexample");
 					System.out.println(data);
 					break;
 				}
 				preferenceSystemNode = preferenceSystemNode.getNext();
 			}
-			
+
+		}
+		if (preferenceSystemNode == null) {
+			System.out.println("null terminate");
 		}
 		System.out.println("Done!");
 	}

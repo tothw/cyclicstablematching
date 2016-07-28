@@ -80,4 +80,15 @@ public class Group {
 		}
 		return sb.toString();
 	}
+
+	public String computeHash() {
+		StringBuffer sb = new StringBuffer();
+		for(Agent agent : agents) {
+			int[] preferences = agent.getPreferences();
+			for(int i  = 0; i< preferences.length; ++i) {
+				sb.append(preferences[i]);
+			}
+		}
+		return sb.toString();
+	}
 }

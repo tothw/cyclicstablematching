@@ -48,7 +48,9 @@ public class StabilityChecker {
     public boolean hasStableMatch() {
         hasStableMatch = false;
         loud = false;
-        sufficientChecks();
+        if(sufficientChecks()) {
+        	return hasStableMatch;
+        }
         if (!hasStableMatch && preferenceSystem.size() % (preferenceSystem.getNumberOfAgents() * preferenceSystem.getNumberOfGroups()) == 0) {
             attemptStableMatch();
         }
@@ -58,12 +60,13 @@ public class StabilityChecker {
         return hasStableMatch;
     }
 
-    private void sufficientChecks() {
+     private boolean sufficientChecks() {
         checkFirstChoiceCycle();
         if (!hasStableMatch) {
             checkFirstChoiceNineCycle();
         }
         checkAllSameDifferent();
+        return hasStableMatch;
     }
 
 
@@ -113,7 +116,6 @@ public class StabilityChecker {
         }
     }
 
-    @SuppressWarnings("unused")
     private void checkAllSameDifferent() {
         for (Group group : preferenceSystem.getGroups()) {
             checkAllSameDifferent(group);
@@ -130,7 +132,7 @@ public class StabilityChecker {
         for (int i = 0; i < firstChoices.length; ++i) {
             negativeOneChoices = negativeOneChoices && firstChoices[i] == -1;
         }
-        if (negativeOneChoices = true) {
+        if (negativeOneChoices == true) {
             return;
         }
         if (firstChoices.length == 1) {
