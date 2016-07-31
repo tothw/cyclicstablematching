@@ -1,6 +1,8 @@
 package wjtoth.cyclicstablematching;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class PerfectMatching implements Comparable<PerfectMatching>{
 	
@@ -9,7 +11,8 @@ public class PerfectMatching implements Comparable<PerfectMatching>{
 	
 	//Store matching
 	ArrayList<int[]> matching;
-	
+	private String hash;
+
 	public PerfectMatching(int numberOfGroups, int numberOfAgents) {
 		NUMBER_OF_GROUPS = numberOfGroups;
 		NUMBER_OF_AGENTS = numberOfAgents;
@@ -28,6 +31,27 @@ public class PerfectMatching implements Comparable<PerfectMatching>{
 				matching.add(i,match);
 			}
 		}
+		Collections.sort(matching, new Comparator<int[]>() {
+			@Override
+			public int compare(int[] o1, int[] o2) {
+				if(o1.length != o2.length) {
+					return o1.length - o2.length;
+				}
+				for(int i = 0; i<o1.length; ++i) {
+					if(o1[i] != o2[i]) {
+						return o1[i] - o2[i];
+					}
+				}
+				return 0;
+			}
+		});
+		StringBuffer sb = new StringBuffer();
+		for(int[] match : matching) {
+			for(int agent : match) {
+				sb.append(agent);
+			}
+		}
+		hash = sb.toString();
 	}
 	
 	public void setMatching(ArrayList<int[]> matching) {
@@ -71,31 +95,11 @@ public class PerfectMatching implements Comparable<PerfectMatching>{
 		return NUMBER_OF_AGENTS;
 	}
 
+	public String getHash() {
+		return hash;
+	}
+
 	public int compareTo(PerfectMatching perfectMatching) {
-		final int pmNumberOfGroups = perfectMatching.getNUMBER_OF_GROUPS();
-		final int pmNumberOfAgents = perfectMatching.getNUMBER_OF_AGENTS();
-		if(pmNumberOfGroups != NUMBER_OF_GROUPS) {
-			return NUMBER_OF_GROUPS-pmNumberOfGroups;
-		}else {
-			if(pmNumberOfAgents != NUMBER_OF_AGENTS) {
-				return NUMBER_OF_AGENTS - pmNumberOfAgents;
-			}else{
-				int thisValueTotal = 0;
-				int pmValueTotal = 0;
-				for(int i = 0; i< NUMBER_OF_AGENTS; ++i) {
-					int[] thisMatch = matching.get(i);
-					int[] pmMatch = perfectMatching.getMatching().get(i);
-					int thisValue = 0;
-					int pmValue = 0;
-					for(int j = 0; j< NUMBER_OF_GROUPS; ++j) {
-						thisValue = thisValue*NUMBER_OF_GROUPS + thisMatch[j];
-						pmValue = pmValue*NUMBER_OF_GROUPS + pmMatch[j];
-					}
-					thisValueTotal = thisValueTotal*NUMBER_OF_GROUPS*NUMBER_OF_AGENTS + thisValue;
-					pmValueTotal = pmValueTotal*NUMBER_OF_GROUPS*NUMBER_OF_AGENTS + pmValue;
-				}
-				return thisValueTotal-pmValueTotal;
-			}
-		}
+		return hash.compareTo(perfectMatching.getHash());
 	}
 }

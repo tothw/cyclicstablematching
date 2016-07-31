@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.Scanner;
 
 public class StabilityChecker {
 
@@ -20,7 +21,7 @@ public class StabilityChecker {
     private PerfectMatching[] matchings;
 
     public StabilityChecker(int numberOfAgents, int numberOfGroups) {
-        ArrayList<int[]> permutations = Permutations.permutations(numberOfAgents);
+        ArrayList<int[]> permutations = Permutations.permutationsOfAllSubsets(numberOfAgents);
         crossProduct = new CrossProduct<int[]>(permutations, numberOfGroups);
         preferenceSystem = new PreferenceSystem(numberOfGroups, numberOfAgents);
         hasStableMatch = false;
@@ -32,9 +33,46 @@ public class StabilityChecker {
         Set<PerfectMatching> matchingSet = new TreeSet<PerfectMatching>();
         while (crossProduct.hasNext()) {
             PerfectMatching perfectMatching = new PerfectMatching(numberOfGroups, numberOfAgents);
-            perfectMatching.setMatchingFromPermutations(crossProduct.next());
-            matchingSet.add(perfectMatching);
+            ArrayList<int[]> permutationTuple = crossProduct.next();
+            boolean sameSize = true;
+            boolean properMatch = true;
+            int size = permutationTuple.size();
+            for(int i = 0; i< size; ++i) {
+                int[] currentTuple = permutationTuple.get(i);
+                int[] nextTuple = permutationTuple.get((i+1) % size);
+                int currentTupleCount = 0;
+                int nextTupleCount = 0;
+                for(int j = 0; j<currentTuple.length; ++j) {
+                    if(currentTuple[j] > -1) {
+                        ++currentTupleCount;
+                    }
+                    if(nextTuple[j] > -1) {
+                        ++nextTupleCount;
+                    }
+                }
+
+                sameSize &= currentTupleCount == nextTupleCount;
+                if(!sameSize) {
+                    break;
+                }
+                for(int j = 0; j<currentTuple.length; ++j) {
+                    boolean currentIsMatched = currentTuple[j] >=0;
+                    boolean nextIsMatched = nextTuple[j] >= 0;
+                    properMatch &= (currentIsMatched && nextIsMatched) || (!currentIsMatched && !nextIsMatched);
+                }
+                if(!properMatch) {
+                    break;
+                }
+            }
+            if(sameSize && properMatch) {
+                perfectMatching.setMatchingFromPermutations(permutationTuple);
+                matchingSet.add(perfectMatching);
+            }
         }
+        for(PerfectMatching perfectMatching: matchingSet) {
+            System.out.println(perfectMatching.toString());
+        }
+        new Scanner(System.in).nextInt();
         matchings = new PerfectMatching[matchingSet.size()];
         matchingSet.toArray(matchings);
         loud = false;
