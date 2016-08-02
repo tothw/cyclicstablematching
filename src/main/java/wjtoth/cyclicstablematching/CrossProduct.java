@@ -2,28 +2,29 @@ package wjtoth.cyclicstablematching;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.List;
 
 public class CrossProduct<T> {
 	
-	private ArrayList<ArrayList<T>> sets;
+	private ArrayList<List<T>> sets;
 	private int dimension;
 	private int[] indices;
 	private boolean hasNext;
 
 
-	public CrossProduct(ArrayList<T> set, int dimension) {
-		ArrayList<ArrayList<T>> sets = new ArrayList<>(dimension);
+	public CrossProduct(List<T> set, int dimension) {
+		ArrayList<List<T>> sets = new ArrayList<>(dimension);
 		for(int i = 0; i<dimension; ++i) {
 			sets.add(set);
 		}
 		initialize(sets);
 	}
 
-	public CrossProduct(ArrayList<ArrayList<T>> sets) {
+	public CrossProduct(ArrayList<List<T>> sets) {
 		initialize(sets);
 	}
 
-	private void initialize(ArrayList<ArrayList<T>> sets) {
+	private void initialize(ArrayList<List<T>> sets) {
 		this.sets = sets;
 		this.dimension = sets.size();
 		indices = new int[dimension];
@@ -47,7 +48,7 @@ public class CrossProduct<T> {
 		int index = indices.length-1;
 		boolean successFlag = false;
 		while(index >= 0) {
-			ArrayList<T> set = sets.get(index);
+			List<T> set = sets.get(index);
 			indices[index] = (indices[index] + 1) % set.size();
 			if(indices[index] == 0) {
 				--index;

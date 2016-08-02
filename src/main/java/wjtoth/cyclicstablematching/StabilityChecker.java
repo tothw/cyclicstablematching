@@ -1,15 +1,11 @@
 package wjtoth.cyclicstablematching;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.Scanner;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class StabilityChecker {
 
     private PreferenceSystem preferenceSystem;
-    private final CrossProduct<int[]> crossProduct;
 
     private boolean hasStableMatch;
 
@@ -21,8 +17,6 @@ public class StabilityChecker {
     private PerfectMatching[] matchings;
 
     public StabilityChecker(int numberOfAgents, int numberOfGroups) {
-        ArrayList<int[]> permutations = Permutations.permutationsOfAllSubsets(numberOfAgents);
-        crossProduct = new CrossProduct<int[]>(permutations, numberOfGroups);
         preferenceSystem = new PreferenceSystem(numberOfGroups, numberOfAgents);
         hasStableMatch = false;
         ArrayList<Integer> agents = new ArrayList<Integer>();
@@ -30,52 +24,68 @@ public class StabilityChecker {
             agents.add(i);
         }
         blockers = new CrossProduct<Integer>(agents, numberOfGroups);
-        Set<PerfectMatching> matchingSet = new TreeSet<PerfectMatching>();
-        while (crossProduct.hasNext()) {
-            PerfectMatching perfectMatching = new PerfectMatching(numberOfGroups, numberOfAgents);
-            ArrayList<int[]> permutationTuple = crossProduct.next();
-            boolean sameSize = true;
-            boolean properMatch = true;
-            int size = permutationTuple.size();
-            for(int i = 0; i< size; ++i) {
-                int[] currentTuple = permutationTuple.get(i);
-                int[] nextTuple = permutationTuple.get((i+1) % size);
-                int currentTupleCount = 0;
-                int nextTupleCount = 0;
-                for(int j = 0; j<currentTuple.length; ++j) {
-                    if(currentTuple[j] > -1) {
-                        ++currentTupleCount;
-                    }
-                    if(nextTuple[j] > -1) {
-                        ++nextTupleCount;
-                    }
-                }
-
-                sameSize &= currentTupleCount == nextTupleCount;
-                if(!sameSize) {
-                    break;
-                }
-                for(int j = 0; j<currentTuple.length; ++j) {
-                    boolean currentIsMatched = currentTuple[j] >=0;
-                    boolean nextIsMatched = nextTuple[j] >= 0;
-                    properMatch &= (currentIsMatched && nextIsMatched) || (!currentIsMatched && !nextIsMatched);
-                }
-                if(!properMatch) {
-                    break;
-                }
-            }
-            if(sameSize && properMatch) {
-                perfectMatching.setMatchingFromPermutations(permutationTuple);
-                matchingSet.add(perfectMatching);
-            }
+        buildMatchings(numberOfAgents, numberOfGroups);
+        for(PerfectMatching perfectMatching : matchings) {
+            System.out.println(perfectMatching);
+            new Scanner(System.in).nextInt();
         }
-        for(PerfectMatching perfectMatching: matchingSet) {
-            System.out.println(perfectMatching.toString());
+        loud = false;
+    }
+
+    private void buildMatchings(int numberOfAgents, int numberOfGroups) {
+        List<int[]> permutations = new ArrayList<>();
+        for(PermutationArray permutationArray : Permutations.permutationsOfAllSubsets(numberOfAgents)) {
+            permutations.add(permutationArray.getArray());
+        }
+        System.out.println("Have permutations");
+        ArrayList<List<int[]>> permutationsSplitByLength = splitByLength(permutations, numberOfAgents);
+        System.out.println("Split permutations");
+        ArrayList<PerfectMatching> matchingSet = new ArrayList<PerfectMatching>();
+        for(List<int[]> permutationsOfALength : permutationsSplitByLength) {
+            System.out.println("Processing: " + permutationsOfALength.size() + " permutations");
+            CrossProduct<int[]> crossProduct = new CrossProduct<int[]>(permutationsOfALength, numberOfGroups-1);
+            List<PerfectMatching> uniqueMatchings = getMatchings(crossProduct, numberOfAgents, numberOfGroups-1).stream().distinct().collect(Collectors.toList());
+            matchingSet.addAll(uniqueMatchings);
         }
         new Scanner(System.in).nextInt();
         matchings = new PerfectMatching[matchingSet.size()];
         matchingSet.toArray(matchings);
-        loud = false;
+    }
+
+    private List<PerfectMatching> getMatchings(CrossProduct<int[]> crossProduct, int numberOfAgents, int numberOfGroups) {
+        List<PerfectMatching> matchingSet = new LinkedList<>();
+        int count = 0;
+        while(crossProduct.hasNext()) {
+            ++count;
+            ArrayList<int[]> match = crossProduct.next();
+            PerfectMatching perfectMatching = new PerfectMatching(numberOfGroups, numberOfAgents);
+            perfectMatching.setMatchingFromPermutations(match);
+            matchingSet.add(perfectMatching);
+            if(count % 2000000 == 0) {
+                System.out.println("Prior Set size: " + matchingSet.size());
+                matchingSet = matchingSet.stream().distinct().collect(Collectors.toList());
+                System.out.println("Set Size: " + matchingSet.size());
+            }
+        }
+        System.out.println("Processed " + count + " tuples");
+        return matchingSet.stream().distinct().collect(Collectors.toList());
+    }
+
+    private ArrayList<List<int[]>> splitByLength(List<int[]> permutations, int numberOfAgents) {
+        ArrayList<List<int[]>> retval = new ArrayList<List<int[]>>(numberOfAgents);
+        for(int i = 0; i<numberOfAgents; ++i) {
+            retval.add(new ArrayList<int[]>());
+        }
+        for(int[] permutation : permutations) {
+            int length = 0;
+            for(int i = 0; i<numberOfAgents; ++i) {
+                if (permutation[i] > -1) {
+                    ++length;
+                }
+            }
+            retval.get(length-1).add(permutation);
+        }
+        return retval;
     }
 
     public void setPreferenceSystem(PreferenceSystem preferenceSystem) {

@@ -1,15 +1,16 @@
 package wjtoth.cyclicstablematching;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class Permutations {
 
-	public static ArrayList<int[]> permutations(int n) {
+	public static ArrayList<PermutationArray> permutations(int n) {
 		return permutations(array(n));
 	}
 
-	public static ArrayList<int[]> permutationsOfAllSubsets(int n) {
+	public static List<PermutationArray> permutationsOfAllSubsets(int n) {
 		return permutationsOfAllSubsets(array(n));
 	}
 
@@ -21,11 +22,11 @@ public class Permutations {
 		return retval;
 	}
 
-	public static ArrayList<int[]> permutationsOfAllSubsets(int[] array) {
+	public static List<PermutationArray> permutationsOfAllSubsets(int[] array) {
 		int subsets = (int)Math.pow(2, array.length);
 		int[] indices = new int[array.length];
 
-		ArrayList<int[]> retval = new ArrayList<>();
+		ArrayList<PermutationArray> retval = new ArrayList<>();
 
 		for(int k = 1; k<subsets; ++k) {
 			int[] subset = new int[array.length];
@@ -40,13 +41,13 @@ public class Permutations {
 			retval.addAll(permutations(subset));
 		}
 
-		return retval;
+		return retval.stream().distinct().collect(Collectors.toList());
 	}
 
-	public static ArrayList<int[]> permutations(int[] array) {
-	    ArrayList<int[]> retval = new ArrayList<int[]>();
+	public static ArrayList<PermutationArray> permutations(int[] array) {
+	    ArrayList<PermutationArray> retval = new ArrayList<>();
 	    if (array.length == 1) {
-	        retval.add(array);
+	        retval.add(new PermutationArray(array));
 	    } else if (array.length > 1) {
 	        int lastIndex = array.length - 1;
 	        int last = array[lastIndex];
@@ -59,19 +60,19 @@ public class Permutations {
 	    return retval;
 	}
 	
-	public static ArrayList<int[]> merge (ArrayList<int[]> list, int addend) {
-		ArrayList<int[]> retval = new ArrayList<int[]>();
-		for(int[] prev : list) {
-			for(int i = 0; i<prev.length+1; ++i) {
-				int[] next = new int[prev.length+1];
+	public static ArrayList<PermutationArray> merge (ArrayList<PermutationArray> list, int addend) {
+		ArrayList<PermutationArray> retval = new ArrayList<>();
+		for(PermutationArray prev : list) {
+			for(int i = 0; i<prev.getArray().length+1; ++i) {
+				int[] next = new int[prev.getArray().length+1];
 				for(int j = 0; j<i; ++j) {
-					next[j] = prev[j];
+					next[j] = prev.getArray()[j];
 				}
 				next[i] = addend;
 				for(int j = i+1; j<next.length; ++j) {
-					next[j] = prev[j-1];
+					next[j] = prev.getArray()[j-1];
 				}
-				retval.add(next);
+				retval.add(new PermutationArray(next));
 			}
 		}
 		return retval;
