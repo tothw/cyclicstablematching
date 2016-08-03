@@ -152,6 +152,7 @@ public class PerfectMatching implements Comparable<PerfectMatching>{
 				extendedMatch[i] = match[i];
 			}
 			extendedMatch[match.length] = permutation[k];
+			extendedMatching.add(extendedMatch);
 			++k;
 		}
 		PerfectMatching retval = new PerfectMatching(getNUMBER_OF_GROUPS() + 1, getNUMBER_OF_AGENTS());
