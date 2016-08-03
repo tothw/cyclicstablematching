@@ -25,9 +25,6 @@ public class StabilityChecker {
 		}
 		blockers = new CrossProduct<Integer>(agents, numberOfGroups);
 		buildMatchings(numberOfAgents, numberOfGroups);
-		for (PerfectMatching perfectMatching : matchings) {
-			System.out.println(perfectMatching);
-		}
 		loud = false;
 	}
 
@@ -238,7 +235,7 @@ public class StabilityChecker {
 
 	private boolean isComplete(PerfectMatching perfectMatching) {
 		for (int[] match : perfectMatching.getMatching()) {
-			if (!isAcceptable(match)) {
+			if (!isAcceptable(match) || !isVerified(match, perfectMatching)) {
 				if (loud) {
 					System.out.println("Not complete");
 				}
@@ -250,11 +247,28 @@ public class StabilityChecker {
 		}
 		return true;
 	}
+	
+	private boolean isVerified(int[] match, PerfectMatching perfectMatching) {
+		for(int i = 0 ; i<match.length; ++i) {
+			if(match[i] == -1) {
+				continue;
+			}
+			Agent agent = preferenceSystem.getAgents(i).get(match[i]);
+			int partner = perfectMatching.getPartner(i, match[i]);
+			for(int j = 0; j<preferenceSystem.getNumberOfAgents(); ++j) {
+				if(agent.prefers(j, partner) && 
+						!perfectMatching.isMatchedInGroup((i+1)%preferenceSystem.getNumberOfGroups(), j)) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 
 	private boolean isAcceptable(int[] match) {
 		for (int i = 0; i < match.length; ++i) {
 			int agentIndex = match[i];
-			if(agentIndex == -1 ) {
+			if (agentIndex == -1) {
 				continue;
 			}
 			int matchPartner = match[(i + 1) % match.length];
@@ -269,7 +283,14 @@ public class StabilityChecker {
 		blockers.reset();
 		while (blockers.hasNext()) {
 			ArrayList<Integer> blocker = blockers.next();
-			if (isBlocking(blocker, perfectMatching)) {
+			boolean invalidBlocker = false;
+			for(int i = 0; i<preferenceSystem.getNumberOfGroups(); ++i) {
+				int blockingAgent = blocker.get(i);
+				if(!perfectMatching.isMatchedInGroup(i, blockingAgent)) {
+					invalidBlocker = true;
+				}
+			}
+			if (!invalidBlocker && isBlocking(blocker, perfectMatching)) {
 				if (loud) {
 					System.out.println("Is Blocking");
 				}
@@ -285,7 +306,9 @@ public class StabilityChecker {
 			int agentIndex = blocker.get(i);
 			int blockPartner = blocker.get((i + 1) % blocker.size());
 			int matchPartner = perfectMatching.getPartner(i, agentIndex);
-			retval = retval && preferenceSystem.getAgents(i).get(agentIndex).prefers(blockPartner, matchPartner);
+			if (matchPartner != -1) {
+				retval = retval && preferenceSystem.getAgents(i).get(agentIndex).prefers(blockPartner, matchPartner);
+			}
 		}
 		return retval;
 	}

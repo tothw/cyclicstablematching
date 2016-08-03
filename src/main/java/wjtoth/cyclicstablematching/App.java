@@ -218,10 +218,6 @@ public class App {
 		int previousSize = 0;
 		while (preferenceSystemNode != null && preferenceSystemNode.hasNext()) {
 			PreferenceSystem data = preferenceSystemNode.getData();
-			if (data.size() % NUMBER_OF_AGENTS * NUMBER_OF_GROUPS == 0 && data.size() < previousSize) {
-				System.out.println(data);
-				System.out.println("System size: " + data.size());
-			}
 			if (data.size() >= previousSize) {
 				System.out.println(data);
 				System.out.println("System size: " + data.size());
@@ -230,9 +226,8 @@ public class App {
 			}
 			stabilityChecker.setPreferenceSystem(data);
 			if (stabilityChecker.hasStableMatch()) {
-				if (data.size() < 75) {
+				if (data.size() < 30) {
 					System.out.println("Eliminated Node at depth: " + data.size() + " by sufficient stability");
-					System.out.println("Progress\n" + data);
 				}
 				preferenceSystemNode = preferenceSystemNode.getParent();
 			} else {

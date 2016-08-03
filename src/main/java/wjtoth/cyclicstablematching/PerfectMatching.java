@@ -159,4 +159,17 @@ public class PerfectMatching implements Comparable<PerfectMatching>{
 		retval.setMatching(extendedMatching);
 		return retval;
 	}
+	
+	public boolean isMatchedInGroup(int group, int agent) {
+		for(int[] match : matching) {
+			if(match[group] == agent) {
+				if(match[(group + 1) % NUMBER_OF_GROUPS] != -1) {
+					return true;
+				}else{
+					return false;
+				}
+			}
+		}
+		return false;
+	}
 }
