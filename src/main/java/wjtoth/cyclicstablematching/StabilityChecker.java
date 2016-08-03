@@ -43,8 +43,7 @@ public class StabilityChecker {
         ArrayList<PerfectMatching> matchingSet = new ArrayList<PerfectMatching>();
         for(List<int[]> permutationsOfALength : permutationsSplitByLength) {
             System.out.println("Processing: " + permutationsOfALength.size() + " permutations");
-            CrossProduct<int[]> crossProduct = new CrossProduct<int[]>(permutationsOfALength, numberOfGroups-1);
-            List<PerfectMatching> uniqueMatchings = getMatchings(crossProduct, numberOfAgents, numberOfGroups-1).stream().distinct().collect(Collectors.toList());
+            List<PerfectMatching> uniqueMatchings = getMatchings(permutationsOfALength, numberOfAgents, numberOfGroups).stream().distinct().collect(Collectors.toList());
             matchingSet.addAll(uniqueMatchings);
         }
         new Scanner(System.in).nextInt();
@@ -52,23 +51,30 @@ public class StabilityChecker {
         matchingSet.toArray(matchings);
     }
 
-    private List<PerfectMatching> getMatchings(CrossProduct<int[]> crossProduct, int numberOfAgents, int numberOfGroups) {
+    private List<PerfectMatching> getMatchings(List<int[]> permutations, int numberOfAgents, int numberOfGroups) {
+        CrossProduct<int[]> crossProduct = new CrossProduct<int[]>(permutations, 2);
         List<PerfectMatching> matchingSet = new LinkedList<>();
-        int count = 0;
         while(crossProduct.hasNext()) {
-            ++count;
             ArrayList<int[]> match = crossProduct.next();
-            PerfectMatching perfectMatching = new PerfectMatching(numberOfGroups, numberOfAgents);
+            PerfectMatching perfectMatching = new PerfectMatching(2, numberOfAgents);
             perfectMatching.setMatchingFromPermutations(match);
             matchingSet.add(perfectMatching);
-            if(count % 2000000 == 0) {
-                System.out.println("Prior Set size: " + matchingSet.size());
-                matchingSet = matchingSet.stream().distinct().collect(Collectors.toList());
-                System.out.println("Set Size: " + matchingSet.size());
+        }
+
+        for(int i = 2; i<numberOfGroups; ++i) {
+            matchingSet = extendMatchingsByPermutations(permutations, matchingSet);
+        }
+        return matchingSet.stream().distinct().collect(Collectors.toList());
+    }
+
+    private List<PerfectMatching> extendMatchingsByPermutations(List<int[]> permutations, List<PerfectMatching> perfectMatchings) {
+        List<PerfectMatching> retval = new ArrayList<>();
+        for(PerfectMatching perfectMatching: perfectMatchings) {
+            for(int[] permutation : permutations) {
+                retval.add(perfectMatching.extend(permutation));
             }
         }
-        System.out.println("Processed " + count + " tuples");
-        return matchingSet.stream().distinct().collect(Collectors.toList());
+        return retval.stream().distinct().collect(Collectors.toList());
     }
 
     private ArrayList<List<int[]>> splitByLength(List<int[]> permutations, int numberOfAgents) {
