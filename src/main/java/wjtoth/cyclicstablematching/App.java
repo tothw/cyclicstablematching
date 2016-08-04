@@ -3,6 +3,7 @@ package wjtoth.cyclicstablematching;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -53,7 +54,9 @@ public class App {
 			preferenceSystem.setSystemGroup(i, group);
 		}
 		System.out.println(preferenceSystem);
-		preferenceSystem.sortPreferences();
+		for(int i = numberOfGroups -1; i >= 0; ++i) {
+			preferenceSystem.sortPreferences(i);
+		}  
 		System.out.println("Sorted");
 		System.out.println(preferenceSystem);
 		System.out.println("Matchings to check (input -1 to check all possible):");
@@ -216,6 +219,7 @@ public class App {
 		StabilityChecker stabilityChecker = new StabilityChecker(NUMBER_OF_AGENTS, NUMBER_OF_GROUPS);
 		System.out.println("Done Constructing Stability Checker");
 		int previousSize = 0;
+		Random random = new Random();
 		while (preferenceSystemNode != null && preferenceSystemNode.hasNext()) {
 			PreferenceSystem data = preferenceSystemNode.getData();
 			if (data.size() >= previousSize) {
@@ -226,8 +230,9 @@ public class App {
 			}
 			stabilityChecker.setPreferenceSystem(data);
 			if (stabilityChecker.hasStableMatch()) {
-				if (data.size() < 30) {
+				if (random.nextInt(10) == 0) {
 					System.out.println("Eliminated Node at depth: " + data.size() + " by sufficient stability");
+					System.out.println(data);
 				}
 				preferenceSystemNode = preferenceSystemNode.getParent();
 			} else {

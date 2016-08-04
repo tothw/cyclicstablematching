@@ -133,13 +133,13 @@ public class PreferenceSystem implements Comparable<PreferenceSystem>{
 		return sb.toString();
 	}
 	
-	public void sortPreferences() {/**
+	public void sortPreferences(int group) {/**
 		for(int i = groups.size()-1; i >=0; --i) {
 			Group group = groups.get(i);
 			sortPreferences(group, 0, group.getGroupSize()-1);
 		}**/
 		//Weaker sort
-		sortPreferences(groups.get(0), 0, groups.get(0).getGroupSize()-1);
+		sortPreferences(groups.get(group), 0, groups.get(group).getGroupSize()-1);
 	}
 	
 	private void sortPreferences(Group group, int p, int r) {

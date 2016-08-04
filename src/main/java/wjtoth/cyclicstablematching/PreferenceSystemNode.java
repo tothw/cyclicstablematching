@@ -40,13 +40,18 @@ public class PreferenceSystemNode {
 
 	public PreferenceSystemNode getChild() {
 		PreferenceSystem extensionSystem = data.extend(extender, unacceptablePartners[unacceptablePartnersIndex]);
-		String hashPreSort = extensionSystem.computeHash();
-		String hashPostSort;
-		// if (extensionSystem.size() %
-		// extensionSystem.getNumberOfAgents()*extensionSystem.getNumberOfGroups()
-		// == 0) {
-		extensionSystem.sortPreferences();
-		hashPostSort = extensionSystem.computeHash();
+		boolean lexMin = true;
+
+		for(int i = 0; i<data.getNumberOfGroups(); ++i) {
+			String hashPreSort = extensionSystem.getGroups().get(i).computeHash();
+			PreferenceSystem extensionCopy = extensionSystem.deepCopy();
+			extensionCopy.sortPreferences(i);
+			String hashPostSort = extensionCopy.getGroups().get(i).computeHash();
+			if(hashPostSort.compareTo(hashPreSort) < 0) {
+				lexMin = false;
+				break;
+			}
+		}
 		/**
 		 * } else { hashPostSort = hashPreSort; }
 		 **/
@@ -54,7 +59,7 @@ public class PreferenceSystemNode {
 		// if hash is unchanged we have canonical preference system
 		// otherwise there is a preference system symmetric to this one that can
 		// be considered instead
-		if (hashPreSort.equals(hashPostSort) && groupLexMax(hashPostSort)) {
+		if (lexMin) {
 			PreferenceSystemNode preferenceSystemNode = new PreferenceSystemNode(extensionSystem, this);
 			return preferenceSystemNode;
 		} else {

@@ -16,6 +16,8 @@ public class StabilityChecker {
 
 	private PerfectMatching[] matchings;
 
+	private PerfectMatching lastSuccessfulMatching = null;
+	
 	public StabilityChecker(int numberOfAgents, int numberOfGroups) {
 		preferenceSystem = new PreferenceSystem(numberOfGroups, numberOfAgents);
 		hasStableMatch = false;
@@ -106,11 +108,11 @@ public class StabilityChecker {
 	public boolean hasStableMatch() {
 		hasStableMatch = false;
 		loud = false;
+		//Generalized by new Stable Match check (Claim 1)
 		if (sufficientChecks()) {
 			return hasStableMatch;
 		}
-		if (!hasStableMatch && preferenceSystem.size()
-				% (preferenceSystem.getNumberOfAgents() * preferenceSystem.getNumberOfGroups()) == 0) {
+		if (!hasStableMatch) {
 			attemptStableMatch();
 		}
 		if (loud) {
@@ -221,13 +223,20 @@ public class StabilityChecker {
 
 	// assumes all groups have same size!
 	public void attemptStableMatch() {
+		if(lastSuccessfulMatching != null) {
+			if(isComplete(lastSuccessfulMatching) && isStable(lastSuccessfulMatching)) {
+				hasStableMatch = true;
+				return;
+			}
+		}
 		for (PerfectMatching perfectMatching : matchings) {
 			if (loud) {
 				System.out.println(perfectMatching);
 			}
 			if (isComplete(perfectMatching) && isStable(perfectMatching)) {
 				hasStableMatch = true;
-				break;
+				lastSuccessfulMatching = perfectMatching;
+				return;
 			}
 
 		}
