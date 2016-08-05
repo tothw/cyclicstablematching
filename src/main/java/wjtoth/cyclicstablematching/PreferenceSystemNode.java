@@ -40,18 +40,7 @@ public class PreferenceSystemNode {
 
 	public PreferenceSystemNode getChild() {
 		PreferenceSystem extensionSystem = data.extend(extender, unacceptablePartners[unacceptablePartnersIndex]);
-		boolean lexMin = true;
-
-		for(int i = 0; i<data.getNumberOfGroups(); ++i) {
-			String hashPreSort = extensionSystem.getGroups().get(i).computeHash();
-			PreferenceSystem extensionCopy = extensionSystem.deepCopy();
-			extensionCopy.sortPreferences(i);
-			String hashPostSort = extensionCopy.getGroups().get(i).computeHash();
-			if(hashPostSort.compareTo(hashPreSort) < 0) {
-				lexMin = false;
-				break;
-			}
-		}
+		
 		/**
 		 * } else { hashPostSort = hashPreSort; }
 		 **/
@@ -59,14 +48,47 @@ public class PreferenceSystemNode {
 		// if hash is unchanged we have canonical preference system
 		// otherwise there is a preference system symmetric to this one that can
 		// be considered instead
-		if (lexMin) {
+		if (isLexMin(extensionSystem)) {
 			PreferenceSystemNode preferenceSystemNode = new PreferenceSystemNode(extensionSystem, this);
 			return preferenceSystemNode;
 		} else {
-			System.out.println("Eliminated node at depth " + data.size() + " by lex max symmetry");
-			System.out.println("Progress\n" + data);
+			//lexicographic minimal symmetry based elimination
 			return getNext();
 		}
+	}
+	
+	private boolean isLexMin(PreferenceSystem extensionSystem) {
+		
+		//verifies that preference vertices have been chosen in lexicographically minimal way
+		for(int i = 0; i<extensionSystem.getNumberOfGroups()-1; ++i) {
+			Group group = extensionSystem.getGroups().get(i);
+			int maxSeen = 0;
+			for(Agent agent : group.getAgents()) {
+				for(int preference : agent.rankedOrder()) {
+					if(preference > maxSeen) {
+						return false;
+					}else {
+						if(preference == maxSeen) {
+							++maxSeen;
+						}
+					}
+				}
+			}
+		}
+		
+		//sorting based reasoning
+		//tries to rotate each group to the front and sort rows lexicographically
+		for(int i = 0; i<data.getNumberOfGroups(); ++i) {
+			String hashPreSort = extensionSystem.getGroups().get(i).computeHash();
+			PreferenceSystem extensionCopy = extensionSystem.deepCopy();
+			extensionCopy.sortPreferences(i);
+			String hashPostSort = extensionCopy.getGroups().get(i).computeHash();
+			if(hashPostSort.compareTo(hashPreSort) < 0) {
+				return false;
+			}
+		}
+		
+		return true;
 	}
 
 	private boolean groupLexMax(String hash) {

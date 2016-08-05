@@ -1,5 +1,7 @@
 package wjtoth.cyclicstablematching;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -54,11 +56,6 @@ public class App {
 			preferenceSystem.setSystemGroup(i, group);
 		}
 		System.out.println(preferenceSystem);
-		for(int i = numberOfGroups -1; i >= 0; ++i) {
-			preferenceSystem.sortPreferences(i);
-		}  
-		System.out.println("Sorted");
-		System.out.println(preferenceSystem);
 		System.out.println("Matchings to check (input -1 to check all possible):");
 		int numMatchingsToCheck = scanner.nextInt();
 		System.out.println("Read in matchingsToCheck: " + numMatchingsToCheck);
@@ -68,7 +65,7 @@ public class App {
 		if (numMatchingsToCheck == -1) {
 			System.out.println("Checking all possible");
 			stabilityChecker.setPreferenceSystem(preferenceSystem);
-			System.out.println(stabilityChecker.loudHasStableMatch());
+			System.out.println(stabilityChecker.checkAllPossible());
 
 		} else {
 			ArrayList<PerfectMatching> matchingsToCheck = new ArrayList<PerfectMatching>();
@@ -218,22 +215,20 @@ public class App {
 		System.out.println("Constructing Stablility Checker");
 		StabilityChecker stabilityChecker = new StabilityChecker(NUMBER_OF_AGENTS, NUMBER_OF_GROUPS);
 		System.out.println("Done Constructing Stability Checker");
-		int previousSize = 0;
-		Random random = new Random();
+
+		Duration printingInterval = Duration.ofMinutes(1);
+		Instant previousInstant = Instant.now();
+		Instant currentInstant = Instant.now();
 		while (preferenceSystemNode != null && preferenceSystemNode.hasNext()) {
 			PreferenceSystem data = preferenceSystemNode.getData();
-			if (data.size() >= previousSize) {
+			currentInstant = Instant.now();
+			if (previousInstant.plus(printingInterval).isBefore(currentInstant)) {
 				System.out.println(data);
 				System.out.println("System size: " + data.size());
-				System.out.println();
-				++previousSize;
+				previousInstant = currentInstant;
 			}
 			stabilityChecker.setPreferenceSystem(data);
 			if (stabilityChecker.hasStableMatch()) {
-				if (random.nextInt(10) == 0) {
-					System.out.println("Eliminated Node at depth: " + data.size() + " by sufficient stability");
-					System.out.println(data);
-				}
 				preferenceSystemNode = preferenceSystemNode.getParent();
 			} else {
 				if (data.size() == NUMBER_OF_AGENTS * NUMBER_OF_AGENTS * NUMBER_OF_GROUPS) {

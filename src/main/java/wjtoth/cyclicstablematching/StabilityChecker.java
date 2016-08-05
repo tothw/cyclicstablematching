@@ -14,10 +14,10 @@ public class StabilityChecker {
 	// For PerfectMatching checking
 	private CrossProduct<Integer> blockers;
 
-	private PerfectMatching[] matchings;
+	private ArrayList<PerfectMatching[]> matchings;
 
 	private PerfectMatching lastSuccessfulMatching = null;
-	
+
 	public StabilityChecker(int numberOfAgents, int numberOfGroups) {
 		preferenceSystem = new PreferenceSystem(numberOfGroups, numberOfAgents);
 		hasStableMatch = false;
@@ -26,6 +26,7 @@ public class StabilityChecker {
 			agents.add(i);
 		}
 		blockers = new CrossProduct<Integer>(agents, numberOfGroups);
+		matchings = new ArrayList<PerfectMatching[]>();
 		buildMatchings(numberOfAgents, numberOfGroups);
 		loud = false;
 	}
@@ -44,11 +45,12 @@ public class StabilityChecker {
 			List<PerfectMatching> uniqueMatchings = getMatchings(permutationsOfALength, numberOfAgents, numberOfGroups)
 					.stream().distinct().collect(Collectors.toList());
 			matchingSet.addAll(uniqueMatchings);
+			PerfectMatching[] matchingsArray = new PerfectMatching[matchingSet.size()];
+			matchingSet.toArray(matchingsArray);
+			matchings.add(matchingsArray);
+			matchingSet.clear();
 		}
 		System.out.println("Done Processing Permutations");
-		matchings = new PerfectMatching[matchingSet.size()];
-		matchingSet.toArray(matchings);
-		System.out.println("Done building array");
 	}
 
 	private List<PerfectMatching> getMatchings(List<int[]> permutations, int numberOfAgents, int numberOfGroups) {
@@ -108,7 +110,7 @@ public class StabilityChecker {
 	public boolean hasStableMatch() {
 		hasStableMatch = false;
 		loud = false;
-		//Generalized by new Stable Match check (Claim 1)
+		// Generalized by new Stable Match check (Claim 1)
 		if (sufficientChecks()) {
 			return hasStableMatch;
 		}
@@ -223,22 +225,38 @@ public class StabilityChecker {
 
 	// assumes all groups have same size!
 	public void attemptStableMatch() {
-		if(lastSuccessfulMatching != null) {
-			if(isComplete(lastSuccessfulMatching) && isStable(lastSuccessfulMatching)) {
+		if (lastSuccessfulMatching != null) {
+			if (isComplete(lastSuccessfulMatching) && isStable(lastSuccessfulMatching)) {
 				hasStableMatch = true;
 				return;
 			}
 		}
-		for (PerfectMatching perfectMatching : matchings) {
-			if (loud) {
-				System.out.println(perfectMatching);
+		int size = 0;
+		int maxCardinality = preferenceSystem.getMaxCardinality();
+		boolean validMatchingFlag = true;
+		for (PerfectMatching[] matchingsOfASize : matchings) {
+			if(validMatchingFlag == false) {
+				break;
 			}
-			if (isComplete(perfectMatching) && isStable(perfectMatching)) {
-				hasStableMatch = true;
-				lastSuccessfulMatching = perfectMatching;
-				return;
+			++size;
+			if (size < maxCardinality || (maxCardinality == 1 && size > 1)) {
+				continue;
 			}
+			validMatchingFlag = false;
+			for (PerfectMatching perfectMatching : matchingsOfASize) {
+				if (loud) {
+					System.out.println(perfectMatching);
+				}
+				if (isComplete(perfectMatching)) {
+					validMatchingFlag = true;
+					if (isStable(perfectMatching)) {
 
+						hasStableMatch = true;
+						lastSuccessfulMatching = perfectMatching;
+						return;
+					}
+				}
+			}
 		}
 	}
 
@@ -256,17 +274,17 @@ public class StabilityChecker {
 		}
 		return true;
 	}
-	
+
 	private boolean isVerified(int[] match, PerfectMatching perfectMatching) {
-		for(int i = 0 ; i<match.length; ++i) {
-			if(match[i] == -1) {
+		for (int i = 0; i < match.length; ++i) {
+			if (match[i] == -1) {
 				continue;
 			}
 			Agent agent = preferenceSystem.getAgents(i).get(match[i]);
 			int partner = perfectMatching.getPartner(i, match[i]);
-			for(int j = 0; j<preferenceSystem.getNumberOfAgents(); ++j) {
-				if(agent.prefers(j, partner) && 
-						!perfectMatching.isMatchedInGroup((i+1)%preferenceSystem.getNumberOfGroups(), j)) {
+			for (int j = 0; j < preferenceSystem.getNumberOfAgents(); ++j) {
+				if (agent.prefers(j, partner)
+						&& !perfectMatching.isMatchedInGroup((i + 1) % preferenceSystem.getNumberOfGroups(), j)) {
 					return false;
 				}
 			}
@@ -293,9 +311,9 @@ public class StabilityChecker {
 		while (blockers.hasNext()) {
 			ArrayList<Integer> blocker = blockers.next();
 			boolean invalidBlocker = false;
-			for(int i = 0; i<preferenceSystem.getNumberOfGroups(); ++i) {
+			for (int i = 0; i < preferenceSystem.getNumberOfGroups(); ++i) {
 				int blockingAgent = blocker.get(i);
-				if(!perfectMatching.isMatchedInGroup(i, blockingAgent)) {
+				if (!perfectMatching.isMatchedInGroup(i, blockingAgent)) {
 					invalidBlocker = true;
 				}
 			}
@@ -330,5 +348,20 @@ public class StabilityChecker {
 			attemptStableMatch();
 		}
 		return hasStableMatch;
+	}
+	
+	public boolean checkAllPossible() {
+		for (PerfectMatching[] matchingsOfASize : matchings) {
+			for (PerfectMatching perfectMatching : matchingsOfASize) {
+				if (isComplete(perfectMatching)) {
+					if (isStable(perfectMatching)) {
+						System.out.println("Stable Matching:");
+						System.out.println(perfectMatching);
+						return true ;
+					}
+				}
+			}
+		}
+		return false;
 	}
 }

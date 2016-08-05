@@ -9,7 +9,8 @@ public class PreferenceSystem implements Comparable<PreferenceSystem>{
 
 	private ArrayList<Group> groups;
 	private int[] groupSizes;
-	
+	private int maxCardinality;
+
 	private String hash;
 
 	
@@ -34,6 +35,19 @@ public class PreferenceSystem implements Comparable<PreferenceSystem>{
 		}
 		this.groupSizes = groupSizes;
 		computeHash();
+		computeMaxCardinality();
+	}
+	
+	public void computeMaxCardinality() {
+		maxCardinality = 0;
+		for(Group group: groups) {
+			for(Agent agent : group.getAgents()) {
+				int listSize = agent.getAcceptablePartnerCount();
+				if(listSize > maxCardinality) {
+					maxCardinality = listSize;
+				}
+			}
+		}
 	}
 
 	public void setSystemGroup(int groupIndex, Group group) {
@@ -46,6 +60,8 @@ public class PreferenceSystem implements Comparable<PreferenceSystem>{
 			Group groupCopy = groups.get(i).deepCopy();
 			preferenceSystem.setSystemGroup(i, groupCopy);
 		}
+		computeHash();
+		computeMaxCardinality();
 		return preferenceSystem;
 	}
 	
@@ -69,10 +85,6 @@ public class PreferenceSystem implements Comparable<PreferenceSystem>{
 	}
 	
 	public Collection<Integer> filterUnacceptablePartners(Agent agent) {
-		//testing something
-		if(true) {
-			return agent.getUnacceptablePartners();
-		}
 		
 		if(agent.getAcceptablePartnerCount() == 0) {
 			ArrayList<Integer> retval = new ArrayList<Integer>();
@@ -221,5 +233,9 @@ public class PreferenceSystem implements Comparable<PreferenceSystem>{
 
 	public int getNumberOfAgents() {
 		return groupSizes[0];
+	}
+	
+	public int getMaxCardinality() {
+		return maxCardinality;
 	}
 }
