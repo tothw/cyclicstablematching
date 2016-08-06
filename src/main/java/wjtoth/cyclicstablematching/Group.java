@@ -86,7 +86,11 @@ public class Group {
 		for(Agent agent : agents) {
 			int[] preferences = agent.getPreferences();
 			for(int i  = 0; i< preferences.length; ++i) {
-				sb.append(preferences[i]);
+				if(preferences[i] > 0) {
+					sb.append(preferences[i]);
+				} else {
+					sb.append('?');
+				}
 			}
 		}
 		return sb.toString();

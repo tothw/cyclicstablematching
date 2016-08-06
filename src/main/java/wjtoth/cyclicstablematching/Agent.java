@@ -8,7 +8,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-public class Agent {
+public class Agent implements Comparable<Agent> {
 
 	//value 0 means index agent is unacceptable
 	//greater value -> agent preferred more
@@ -158,7 +158,7 @@ public class Agent {
 	}
 	
 	//true if <= in terms of preference system
-	public boolean compareTo(Agent agent) {
+	public int compareTo(Agent agent) {
 		int[] agentPreferences = agent.getPreferences();
 		Set<Integer> agentUnacceptablePartners = agent.getUnacceptablePartners();
 		for(int i =0; i<agentPreferences.length; ++i) {
@@ -166,26 +166,26 @@ public class Agent {
 			boolean agentContainsI = agentUnacceptablePartners.contains(i);
 			//if i unacceptable to this but not agent
 			if(containsI && !agentContainsI) {
-				return false;
+				return 1;
 			}
 			//if i acceptable to this but not agent
 			if(!containsI && agentContainsI) {
-				return true;
+				return -1;
 			}
 			//if acceptable to both
 			if(!(containsI || agentContainsI)){
 				//return false if strictly less than
 				if(preferences[i] < agentPreferences[i]) {
-					return false;
+					return 1;
 				}
 				//return true if strictly greater than
 				if(preferences[i] > agentPreferences[i]) {
-					return true;
+					return -1;
 				}
 				//check next index if equal
 			}
 		}
 		//if all indices survived checks then they are the same
-		return true;
+		return 0;
 	}
 }

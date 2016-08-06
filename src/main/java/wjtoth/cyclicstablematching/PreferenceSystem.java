@@ -2,6 +2,7 @@ package wjtoth.cyclicstablematching;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -151,9 +152,15 @@ public class PreferenceSystem implements Comparable<PreferenceSystem>{
 			sortPreferences(group, 0, group.getGroupSize()-1);
 		}**/
 		//Weaker sort
-		sortPreferences(groups.get(group), 0, groups.get(group).getGroupSize()-1);
+		//sortPreferences(groups.get(group), 0, groups.get(group).getGroupSize()-1);
+		//java Collections sort
+		sortPreferences(groups.get(group));
 	}
-	
+
+	public void sortPreferences(Group group) {
+		Collections.sort(group.getAgents());
+	}
+
 	private void sortPreferences(Group group, int p, int r) {
 		if( p < r) {
 			int q = partition(group, p, r);
@@ -166,7 +173,7 @@ public class PreferenceSystem implements Comparable<PreferenceSystem>{
 		Agent x = group.getAgents().get(r);
 		int i = p-1;
 		for(int j = p; j<r; ++j) {
-			if(group.getAgents().get(j).compareTo(x)) {
+			if(group.getAgents().get(j).compareTo(x) <= 0) {
 				++i;
 				exchange(group, i, j);
 			}

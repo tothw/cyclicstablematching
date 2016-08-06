@@ -78,8 +78,8 @@ public class PreferenceSystemNode {
 		
 		//sorting based reasoning
 		//tries to rotate each group to the front and sort rows lexicographically
-		for(int i = 0; i<data.getNumberOfGroups(); ++i) {
-			String hashPreSort = extensionSystem.getGroups().get(i).computeHash();
+		String hashPreSort = extensionSystem.getGroups().get(0).computeHash();
+		for(int i = 0; i<1 /*data.getNumberOfGroups()*/; ++i) {
 			PreferenceSystem extensionCopy = extensionSystem.deepCopy();
 			extensionCopy.sortPreferences(i);
 			String hashPostSort = extensionCopy.getGroups().get(i).computeHash();

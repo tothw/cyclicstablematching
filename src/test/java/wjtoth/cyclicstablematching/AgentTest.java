@@ -51,9 +51,9 @@ public class AgentTest
         int[] preferences2 = {2,1,3};
         testAgent2.setPreferences(preferences2);
 
-        assertTrue(testAgent.compareTo(testAgent2));
-        assertFalse(testAgent2.compareTo(testAgent));
+        assertTrue(testAgent.compareTo(testAgent2)<=0);
+        assertFalse(testAgent2.compareTo(testAgent)<=0);
 
-        assertTrue((testAgent.compareTo(testAgent.deepCopy())) &&testAgent.deepCopy().compareTo(testAgent));
+        assertTrue((testAgent.compareTo(testAgent.deepCopy()))<=0 &&testAgent.deepCopy().compareTo(testAgent)<=0);
     }
 }
