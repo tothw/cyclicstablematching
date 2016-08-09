@@ -1,5 +1,6 @@
 package wjtoth.cyclicstablematching;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -159,6 +160,8 @@ public class Agent implements Comparable<Agent> {
 	
 	//true if <= in terms of preference system
 	public int compareTo(Agent agent) {
+		return this.computeHash().compareTo(agent.computeHash());
+		/**
 		int[] agentPreferences = agent.getPreferences();
 		Set<Integer> agentUnacceptablePartners = agent.getUnacceptablePartners();
 		for(int i =0; i<agentPreferences.length; ++i) {
@@ -186,6 +189,17 @@ public class Agent implements Comparable<Agent> {
 			}
 		}
 		//if all indices survived checks then they are the same
-		return 0;
+		return 0;**/
+	}
+	
+	public String computeHash() {
+		StringBuffer sb = new StringBuffer();
+		for(Integer integer : rankedOrder()) {
+			sb.append(integer);
+		}
+		for(int i = 0; i<unacceptablePartners.size(); ++i) {
+			sb.append('?');
+		}
+		return sb.toString();
 	}
 }

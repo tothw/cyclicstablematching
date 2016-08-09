@@ -35,10 +35,6 @@ public class Group {
 		agents = new ArrayList<Agent>(groupSize);
 		for(int i = 0; i<groupSize; ++i) {
 			Agent agent = new Agent(partnerGroupSize, i, index);
-			//testing something
-			if(i == 0 && (index == 0 || index == 1) && false) {
-				agent.append(1);
-			}
 			agents.add(agent);
 		}
 	}
@@ -84,14 +80,7 @@ public class Group {
 	public String computeHash() {
 		StringBuffer sb = new StringBuffer();
 		for(Agent agent : agents) {
-			int[] preferences = agent.getPreferences();
-			for(int i  = 0; i< preferences.length; ++i) {
-				if(preferences[i] > 0) {
-					sb.append(preferences[i]);
-				} else {
-					sb.append('?');
-				}
-			}
+			sb.append(agent.computeHash());
 		}
 		return sb.toString();
 	}

@@ -153,6 +153,7 @@ public class PreferenceSystem implements Comparable<PreferenceSystem>{
 		}**/
 		//Weaker sort
 		//sortPreferences(groups.get(group), 0, groups.get(group).getGroupSize()-1);
+		
 		//java Collections sort
 		sortPreferences(groups.get(group));
 	}

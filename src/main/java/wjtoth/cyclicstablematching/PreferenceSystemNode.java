@@ -79,7 +79,7 @@ public class PreferenceSystemNode {
 		//sorting based reasoning
 		//tries to rotate each group to the front and sort rows lexicographically
 		String hashPreSort = extensionSystem.getGroups().get(0).computeHash();
-		for(int i = 0; i<1 /*data.getNumberOfGroups()*/; ++i) {
+		for(int i = 0; i< data.getNumberOfGroups(); ++i) {
 			PreferenceSystem extensionCopy = extensionSystem.deepCopy();
 			extensionCopy.sortPreferences(i);
 			String hashPostSort = extensionCopy.getGroups().get(i).computeHash();
@@ -88,22 +88,6 @@ public class PreferenceSystemNode {
 			}
 		}
 		
-		return true;
-	}
-
-	private boolean groupLexMax(String hash) {
-		final int NUMBER_OF_GROUPS = data.getNumberOfGroups();
-		final int INTERVAL_LENGTH = hash.length() / NUMBER_OF_GROUPS;
-		String[] groupStrings = new String[NUMBER_OF_GROUPS];
-		for (int i = 0; i < NUMBER_OF_GROUPS; ++i) {
-			groupStrings[i] = hash.substring(i * INTERVAL_LENGTH, (i + 1) * INTERVAL_LENGTH);
-		}
-		if (groupStrings[0].compareTo(groupStrings[1]) < 0) {
-			return false;
-		}
-		if(groupStrings[0].compareTo(groupStrings[NUMBER_OF_GROUPS-1]) < 0) {
-			return false;
-		}
 		return true;
 	}
 
