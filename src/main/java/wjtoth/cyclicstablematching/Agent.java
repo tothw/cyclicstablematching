@@ -1,6 +1,5 @@
 package wjtoth.cyclicstablematching;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -24,7 +23,9 @@ public class Agent implements Comparable<Agent> {
 	}
 
 	private int groupIndex;
+	//number of partners agent finds acceptable
 	private int acceptablePartnerCount = 0;
+	//set of partners agent finds unacceptable
 	private Set<Integer> unacceptablePartners;
 	
 	public Agent(int partnerGroupSize, int index, int groupIndex) {
@@ -41,6 +42,9 @@ public class Agent implements Comparable<Agent> {
 		return preferences;
 	}
 
+	//set preferences to int[]
+	//int[i] should be ranking of agent i
+	//updates acceptablePartnerCount and unacceptablePartners
 	public void setPreferences(int[] preferences) {
 		this.preferences = preferences;
 		acceptablePartnerCount = 0;
@@ -54,6 +58,8 @@ public class Agent implements Comparable<Agent> {
 		}
 	}
 	
+	//sets agent preference over agentIndex to ranking
+	//updates acceptablePartnerCount and unacceptablePartners
 	public void setAgentPreference(int agentIndex, int ranking) {
 		if(agentIndex < preferences.length && ranking >= 0) {
 			if(this.preferences[agentIndex] == 0 && ranking != 0) {
@@ -106,6 +112,7 @@ public class Agent implements Comparable<Agent> {
 		return unacceptablePartners;
 	}
 	
+	//copy
 	public Agent deepCopy() {
 		Agent agent = new Agent(preferences.length, index, groupIndex);
 		for(int i = 0; i<preferences.length; ++i) {
@@ -146,6 +153,7 @@ public class Agent implements Comparable<Agent> {
 		}
 	}
 	
+	//returns first choice partner 
 	public int getFirstChoice() {
 		Iterator<Integer> rankedChoices = rankedOrder().iterator();
 		if(rankedChoices.hasNext()) {
@@ -154,44 +162,22 @@ public class Agent implements Comparable<Agent> {
 		return -1;
 	}
 	
+	//pretty print preference list of agent
+	//as list of partners in ranked order
 	public String toString() {
 		return rankedOrder().toString();
 	}
 	
 	//true if <= in terms of preference system
+	//that is lexicographic order of ranked agents
 	public int compareTo(Agent agent) {
 		return this.computeHash().compareTo(agent.computeHash());
-		/**
-		int[] agentPreferences = agent.getPreferences();
-		Set<Integer> agentUnacceptablePartners = agent.getUnacceptablePartners();
-		for(int i =0; i<agentPreferences.length; ++i) {
-			boolean containsI = unacceptablePartners.contains(i);
-			boolean agentContainsI = agentUnacceptablePartners.contains(i);
-			//if i unacceptable to this but not agent
-			if(containsI && !agentContainsI) {
-				return 1;
-			}
-			//if i acceptable to this but not agent
-			if(!containsI && agentContainsI) {
-				return -1;
-			}
-			//if acceptable to both
-			if(!(containsI || agentContainsI)){
-				//return false if strictly less than
-				if(preferences[i] < agentPreferences[i]) {
-					return 1;
-				}
-				//return true if strictly greater than
-				if(preferences[i] > agentPreferences[i]) {
-					return -1;
-				}
-				//check next index if equal
-			}
-		}
-		//if all indices survived checks then they are the same
-		return 0;**/
 	}
 	
+	//hash string consists of acceptable partners in ranked order
+	//following by '?' characters for each unacceptable agent
+	//note '?' follows '0' to '9' is ascii so unranked is lexicographically
+	//larger than ranked
 	public String computeHash() {
 		StringBuffer sb = new StringBuffer();
 		for(Integer integer : rankedOrder()) {

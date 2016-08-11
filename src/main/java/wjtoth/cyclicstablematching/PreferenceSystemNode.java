@@ -1,14 +1,25 @@
 package wjtoth.cyclicstablematching;
 
 import java.util.Arrays;
-import java.util.Scanner;
 import java.util.Set;
 
+/**
+ * Stores a PreferenceSystem as a node
+ * in a DFS tree
+ * @author wjtoth
+ *
+ */
 public class PreferenceSystemNode {
+	//PreferenceSystem stored by this node
 	PreferenceSystem data;
+	//Parent node in DFS tree
 	PreferenceSystemNode parent;
+	//agent to extend in data to obtain children
 	Agent extender;
+	//unacceptablePartners of extender
 	Integer[] unacceptablePartners;
+	//index of next unacceptablePartner to append
+	//to extender to obtain a child node
 	int unacceptablePartnersIndex;
 
 	public PreferenceSystemNode(PreferenceSystem data, PreferenceSystemNode parent) {
@@ -38,12 +49,12 @@ public class PreferenceSystemNode {
 		return unacceptablePartnersIndex < unacceptablePartners.length;
 	}
 
+	//get next child node to consider
 	public PreferenceSystemNode getChild() {
+		//extend data by appending next unacceptable partner to extender
 		PreferenceSystem extensionSystem = data.extend(extender, unacceptablePartners[unacceptablePartnersIndex]);
 		
-		/**
-		 * } else { hashPostSort = hashPreSort; }
-		 **/
+		//increment for next child node
 		++unacceptablePartnersIndex;
 		// if hash is unchanged we have canonical preference system
 		// otherwise there is a preference system symmetric to this one that can
@@ -57,6 +68,7 @@ public class PreferenceSystemNode {
 		}
 	}
 	
+	//true iff extensionSystem is lexicographically minimal
 	private boolean isLexMin(PreferenceSystem extensionSystem) {
 		
 		//verifies that preference vertices have been chosen in lexicographically minimal way
@@ -89,13 +101,15 @@ public class PreferenceSystemNode {
 		}
 		
 		return true;
-	}
+	} 
 
 	//slightly broken TODO
 	public boolean hasNext() {
 		return hasChild() || hasParent();
 	}
 
+	//returns child if node has unexplored children
+	//otherwise returns parent (DFS)
 	public PreferenceSystemNode getNext() {
 		if (hasChild()) {
 			return getChild();

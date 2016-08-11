@@ -1,17 +1,33 @@
 package wjtoth.cyclicstablematching;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 
+ * Iterates over all tuples in cross product of passed in lists
+ * 
+ * @author wjtoth
+ *
+ * @param <T> Type of sets to take Cross Product
+ */
 public class CrossProduct<T> {
 	
+	//lists to be crossed
 	private ArrayList<List<T>> sets;
+	//number of positions in tuples
 	private int dimension;
+	//used to track which tuple iterator is at
 	private int[] indices;
+	//flag true iff there are tuples left to iterate over
 	private boolean hasNext;
 
 
+	/**
+	 * Constructs CrossProduct by crossing set with itself dimension times
+	 * @param set
+	 * @param dimension
+	 */
 	public CrossProduct(List<T> set, int dimension) {
 		ArrayList<List<T>> sets = new ArrayList<>(dimension);
 		for(int i = 0; i<dimension; ++i) {
@@ -20,10 +36,19 @@ public class CrossProduct<T> {
 		initialize(sets);
 	}
 
+	/**
+	 * Constructs CrossProduct by crossing sets against each other
+	 * dimension will be sets.size()
+	 * @param sets
+	 */
 	public CrossProduct(ArrayList<List<T>> sets) {
 		initialize(sets);
 	}
 
+	/**
+	 * Initialization of class common to both constructors
+	 * @param sets
+	 */
 	private void initialize(ArrayList<List<T>> sets) {
 		this.sets = sets;
 		this.dimension = sets.size();
@@ -35,6 +60,13 @@ public class CrossProduct<T> {
 		return hasNext;
 	}
 	
+	/**
+	 * Computes next tuple to return
+	 * by incrementing indices which is a list
+	 * of which index in respective set to take
+	 * next tuple from
+	 * @return
+	 */
 	public ArrayList<T> next() {
 		ArrayList<T> retval = new ArrayList<T>();
 		for(int i = 0; i<dimension; ++i) {
@@ -44,6 +76,9 @@ public class CrossProduct<T> {
 		return retval;
 	}
 	
+	/**
+	 * count up indices lexicographically
+	 */
 	public void incrementIndices() {
 		int index = indices.length-1;
 		boolean successFlag = false;
@@ -62,6 +97,10 @@ public class CrossProduct<T> {
 		}
 	}
 	
+	/**
+	 * set all indices to 0,
+	 * in effect restarting iteration
+	 */
 	public void reset() {
 		for(int i = 0; i<indices.length; ++i) {
 			indices[i] = 0;

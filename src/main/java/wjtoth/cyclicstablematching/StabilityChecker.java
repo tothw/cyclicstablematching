@@ -5,19 +5,31 @@ import java.util.stream.Collectors;
 
 public class StabilityChecker {
 
+	//PreferenceSystem to be checked for stable matchimg
 	private PreferenceSystem preferenceSystem;
 
+	//flag for existence of stable matching
 	private boolean hasStableMatch;
 
+	//set true for additional printing of behaviour
 	private boolean loud;
 
-	// For PerfectMatching checking
+	// For matching checking, iterates over blocking tuples
 	private CrossProduct<Integer> blockers;
 
-	private ArrayList<PerfectMatching[]> matchings;
+	//matching to use in search of stable matching
+	private ArrayList<Matching[]> matchings;
 
-	private PerfectMatching lastSuccessfulMatching = null;
+	//caches last stable match in hopes that next preference system
+	//to check will also be stable under this matching
+	//TODO investigate how often this is even useful
+	private Matching lastSuccessfulMatching = null;
 
+	/**
+	 *  Standard constructor
+	 * @param numberOfAgents 
+	 * @param numberOfGroups
+	 */
 	public StabilityChecker(int numberOfAgents, int numberOfGroups) {
 		preferenceSystem = new PreferenceSystem(numberOfGroups, numberOfAgents);
 		hasStableMatch = false;
@@ -26,57 +38,85 @@ public class StabilityChecker {
 			agents.add(i);
 		}
 		blockers = new CrossProduct<Integer>(agents, numberOfGroups);
-		matchings = new ArrayList<PerfectMatching[]>();
+		matchings = new ArrayList<Matching[]>();
 		buildMatchings(numberOfAgents, numberOfGroups);
 		loud = false;
 	}
-
+	
+	/**
+	 * Builds all matchings with numberOfGroups genders and numberOfAgents agents
+	 * in each gender
+	 * @param numberOfAgents
+	 * @param numberOfGroups
+	 */
 	private void buildMatchings(int numberOfAgents, int numberOfGroups) {
+		//Obtain all permutations of subsets of [0, ..., numberOfAgents-1]
 		List<int[]> permutations = new ArrayList<>();
 		for (PermutationArray permutationArray : Permutations.permutationsOfAllSubsets(numberOfAgents)) {
 			permutations.add(permutationArray.getArray());
 		}
 		System.out.println("Have permutations");
+		//Split permutations by length
 		ArrayList<List<int[]>> permutationsSplitByLength = splitByLength(permutations, numberOfAgents);
 		System.out.println("Split permutations");
-		ArrayList<PerfectMatching> matchingSet = new ArrayList<PerfectMatching>();
+		ArrayList<Matching> matchingSet = new ArrayList<Matching>();
+		//iterate over lengths and compute all matchings for said length
 		for (List<int[]> permutationsOfALength : permutationsSplitByLength) {
 			System.out.println("Processing: " + permutationsOfALength.size() + " permutations");
-			List<PerfectMatching> uniqueMatchings = getMatchings(permutationsOfALength, numberOfAgents, numberOfGroups)
+			List<Matching> uniqueMatchings = getMatchings(permutationsOfALength, numberOfAgents, numberOfGroups)
 					.stream().distinct().collect(Collectors.toList());
 			matchingSet.addAll(uniqueMatchings);
-			PerfectMatching[] matchingsArray = new PerfectMatching[matchingSet.size()];
+			Matching[] matchingsArray = new Matching[matchingSet.size()];
 			matchingSet.toArray(matchingsArray);
 			matchings.add(matchingsArray);
 			matchingSet.clear();
 		}
+		//Matchings now is a list of lists of matchings of a given length
+		//length means number of tuples in matching
 		System.out.println("Done Processing Permutations");
 	}
 
-	private List<PerfectMatching> getMatchings(List<int[]> permutations, int numberOfAgents, int numberOfGroups) {
+	/**
+	 * Constructs all possible matchings formed by cross products
+	 * of the permutations passed in
+	 * @param permutations
+	 * @param numberOfAgents
+	 * @param numberOfGroups
+	 * @return
+	 */
+	private List<Matching> getMatchings(List<int[]> permutations, int numberOfAgents, int numberOfGroups) {
 		CrossProduct<int[]> crossProduct = new CrossProduct<int[]>(permutations, 2);
-		List<PerfectMatching> matchingSet = new LinkedList<>();
+		List<Matching> matchingSet = new LinkedList<>();
+		//Start by matching pairs
 		while (crossProduct.hasNext()) {
 			ArrayList<int[]> match = crossProduct.next();
-			PerfectMatching perfectMatching = new PerfectMatching(2, numberOfAgents);
+			Matching perfectMatching = new Matching(2, numberOfAgents);
 			perfectMatching.setMatchingFromPermutations(match);
 			if (perfectMatching.validate()) {
 				matchingSet.add(perfectMatching);
 			}
 		}
+		//then iteratively extend pairs until be have numberOfGroups-tuples
+		//this is done to reduce symmetry and compute faster than doing all tuples at once
 		for (int i = 2; i < numberOfGroups; ++i) {
 			matchingSet = extendMatchingsByPermutations(permutations, matchingSet);
 		}
-
 		return matchingSet.stream().distinct().collect(Collectors.toList());
 	}
 
-	private List<PerfectMatching> extendMatchingsByPermutations(List<int[]> permutations,
-			List<PerfectMatching> perfectMatchings) {
-		Set<PerfectMatching> retval = new TreeSet<>();
-		for (PerfectMatching perfectMatching : perfectMatchings) {
+	/**
+	 * for each permutation, for each matching, add mathing extended by permutation
+	 * to output list
+	 * @param permutations
+	 * @param perfectMatchings
+	 * @return
+	 */
+	private List<Matching> extendMatchingsByPermutations(List<int[]> permutations,
+			List<Matching> perfectMatchings) {
+		Set<Matching> retval = new TreeSet<>();
+		for (Matching perfectMatching : perfectMatchings) {
 			for (int[] permutation : permutations) {
-				PerfectMatching extendedMatching = perfectMatching.extend(permutation);
+				Matching extendedMatching = perfectMatching.extend(permutation);
 				if (extendedMatching.validate()) {
 					retval.add(perfectMatching.extend(permutation));
 				}
@@ -85,6 +125,13 @@ public class StabilityChecker {
 		return retval.stream().distinct().collect(Collectors.toList());
 	}
 
+	/**
+	 * Splits list of permutations into list of lists of permutations separated 
+	 * by length of permutation
+	 * @param permutations
+	 * @param numberOfAgents
+	 * @return
+	 */
 	private ArrayList<List<int[]>> splitByLength(List<int[]> permutations, int numberOfAgents) {
 		ArrayList<List<int[]>> retval = new ArrayList<List<int[]>>(numberOfAgents);
 		for (int i = 0; i < numberOfAgents; ++i) {
@@ -102,19 +149,27 @@ public class StabilityChecker {
 		return retval;
 	}
 
+	/**
+	 * Set preference system to be checked for stable matching
+	 * @param preferenceSystem
+	 */
 	public void setPreferenceSystem(PreferenceSystem preferenceSystem) {
 		this.preferenceSystem = preferenceSystem;
 		hasStableMatch = false;
 	}
 
+	// true iff preference system has 
+	// stable matching once extended
 	public boolean hasStableMatch() {
 		hasStableMatch = false;
 		loud = false;
 		// Generalized by new Stable Match check (Claim 1)
+		// But still faster (linear) to run these checks first
 		if (sufficientChecks()) {
 			return hasStableMatch;
 		}
 		if (!hasStableMatch) {
+			//attempt to find a stable matching via (Claim 1)
 			attemptStableMatch();
 		}
 		if (loud) {
@@ -123,6 +178,12 @@ public class StabilityChecker {
 		return hasStableMatch;
 	}
 
+	/**
+	 * Checks 1st choice 3-cycle and 9-cycle
+	 * and 1st choice all same and 1st choice all different
+	 * @return true iff sufficient condition for extensions to have
+	 * stable matching is satisfied
+	 */
 	private boolean sufficientChecks() {
 		checkFirstChoiceCycle();
 		if (!hasStableMatch) {
@@ -224,6 +285,9 @@ public class StabilityChecker {
 	}
 
 	// assumes all groups have same size!
+	/**
+	 * Attempts a stable matching of prefernce system
+	 */
 	public void attemptStableMatch() {
 		if (lastSuccessfulMatching != null) {
 			if (isComplete(lastSuccessfulMatching) && isStable(lastSuccessfulMatching)) {
@@ -232,23 +296,32 @@ public class StabilityChecker {
 			}
 		}
 		int size = 0;
+		//stores sizes of longest preference list an agent has 
 		int maxCardinality = preferenceSystem.getMaxCardinality();
 		boolean validMatchingFlag = true;
-		for (PerfectMatching[] matchingsOfASize : matchings) {
+		for (Matching[] matchingsOfASize : matchings) {
 			if(validMatchingFlag == false) {
+				//if no matchings of a smaller size then there is
+				//no reason to check larger matchings
 				break;
 			}
 			++size;
+			//matchings smaller than max cardinality need not be checked
+			//were checked earlier on smaller system and extensions will not
+			//change their effectiveness
 			if (size < maxCardinality || (maxCardinality == 1 && size > 1)) {
 				continue;
 			}
 			validMatchingFlag = false;
-			for (PerfectMatching perfectMatching : matchingsOfASize) {
+			for (Matching perfectMatching : matchingsOfASize) {
 				if (loud) {
 					System.out.println(perfectMatching);
 				}
+				//checks if matching satisfies conditions of being a matching
+				//that can be used to implicate a stable matching
 				if (isComplete(perfectMatching)) {
 					validMatchingFlag = true;
+					//check for stability
 					if (isStable(perfectMatching)) {
 
 						hasStableMatch = true;
@@ -260,7 +333,14 @@ public class StabilityChecker {
 		}
 	}
 
-	private boolean isComplete(PerfectMatching perfectMatching) {
+	/**
+	 * true iff all matches are acceptable to agents
+	 * and all partners preferred by an agent to their partner
+	 *  are matched
+	 * @param perfectMatching
+	 * @return
+	 */
+	private boolean isComplete(Matching perfectMatching) {
 		for (int[] match : perfectMatching.getMatching()) {
 			if (!isAcceptable(match) || !isVerified(match, perfectMatching)) {
 				if (loud) {
@@ -275,7 +355,13 @@ public class StabilityChecker {
 		return true;
 	}
 
-	private boolean isVerified(int[] match, PerfectMatching perfectMatching) {
+	/**
+	 * true iff all preferred matches to partner are matched
+	 * @param match
+	 * @param perfectMatching
+	 * @return
+	 */
+	private boolean isVerified(int[] match, Matching perfectMatching) {
 		for (int i = 0; i < match.length; ++i) {
 			if (match[i] == -1) {
 				continue;
@@ -292,6 +378,11 @@ public class StabilityChecker {
 		return true;
 	}
 
+	/**
+	 * true iff all matches are acceptable to matched agents
+	 * @param match
+	 * @return
+	 */
 	private boolean isAcceptable(int[] match) {
 		for (int i = 0; i < match.length; ++i) {
 			int agentIndex = match[i];
@@ -306,7 +397,12 @@ public class StabilityChecker {
 		return true;
 	}
 
-	public boolean isStable(PerfectMatching perfectMatching) {
+	/**
+	 * true iff no blocking tuples
+	 * @param perfectMatching
+	 * @return
+	 */
+	public boolean isStable(Matching perfectMatching) {
 		blockers.reset();
 		while (blockers.hasNext()) {
 			ArrayList<Integer> blocker = blockers.next();
@@ -327,7 +423,13 @@ public class StabilityChecker {
 		return true;
 	}
 
-	private boolean isBlocking(ArrayList<Integer> blocker, PerfectMatching perfectMatching) {
+	/**
+	 * true iff blocker blocks matching
+	 * @param blocker
+	 * @param perfectMatching
+	 * @return
+	 */
+	private boolean isBlocking(ArrayList<Integer> blocker, Matching perfectMatching) {
 		boolean retval = true;
 		for (int i = 0; i < blocker.size(); ++i) {
 			int agentIndex = blocker.get(i);
@@ -340,6 +442,7 @@ public class StabilityChecker {
 		return retval;
 	}
 
+	//has stable with more output
 	public boolean loudHasStableMatch() {
 		loud = true;
 		System.out.println("Loud: " + loud);
@@ -350,9 +453,14 @@ public class StabilityChecker {
 		return hasStableMatch;
 	}
 	
+	/**
+	 * Check all possible matchings,
+	 * skipping none
+	 * @return
+	 */
 	public boolean checkAllPossible() {
-		for (PerfectMatching[] matchingsOfASize : matchings) {
-			for (PerfectMatching perfectMatching : matchingsOfASize) {
+		for (Matching[] matchingsOfASize : matchings) {
+			for (Matching perfectMatching : matchingsOfASize) {
 				if (isComplete(perfectMatching)) {
 					if (isStable(perfectMatching)) {
 						System.out.println("Stable Matching:");

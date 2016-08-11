@@ -4,16 +4,27 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Utility class of static methods for
+ * creating permutations
+ * @author wjtoth
+ *
+ */
 public class Permutations {
 
+	//compute permutations of [0,...,n-1]
+	//ArrayList has one element
 	public static ArrayList<PermutationArray> permutations(int n) {
 		return permutations(array(n));
 	}
 
+	//compute permutations of all subsets of [0,...,n-1]
+	//each subset has permutationArray in its own position in List
 	public static List<PermutationArray> permutationsOfAllSubsets(int n) {
 		return permutationsOfAllSubsets(array(n));
 	}
-
+	
+	//compute array [0,...,n-1]
 	public static int[] array(int n) {
 		int[] retval = new int[n];
 		for(int i = 0; i<n;++i) {
@@ -22,6 +33,9 @@ public class Permutations {
 		return retval;
 	}
 
+	//helper of permutationsOfAllSubsets(int n)
+	//alternatively can be used to compute all permutation of all subsets
+	//of elements in array
 	public static List<PermutationArray> permutationsOfAllSubsets(int[] array) {
 		int subsets = (int)Math.pow(2, array.length);
 		int[] indices = new int[array.length];
@@ -44,6 +58,8 @@ public class Permutations {
 		return retval.stream().distinct().collect(Collectors.toList());
 	}
 
+	//compute all permutations of elements of array
+	//helper to permutations(int n)
 	public static ArrayList<PermutationArray> permutations(int[] array) {
 	    ArrayList<PermutationArray> retval = new ArrayList<>();
 	    if (array.length == 1) {
@@ -60,6 +76,7 @@ public class Permutations {
 	    return retval;
 	}
 	
+	//append each permutationArray with addend and return results
 	public static ArrayList<PermutationArray> merge (ArrayList<PermutationArray> list, int addend) {
 		ArrayList<PermutationArray> retval = new ArrayList<>();
 		for(PermutationArray prev : list) {

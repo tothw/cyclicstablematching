@@ -1,7 +1,10 @@
 package wjtoth.cyclicstablematching;
 
 /**
- * Created by justin on 02/08/16.
+ * An array of permutations.
+ * This class exists so I could write 
+ * a particular kind of equals for arrays
+ * of permutations
  */
 public class PermutationArray {
     int[] array;
@@ -11,6 +14,7 @@ public class PermutationArray {
     }
 
     @Override
+    //element wise equality instead of memory address like standard array
     public boolean equals(Object obj) {
         if(getClass() != obj.getClass()) {
             return false;

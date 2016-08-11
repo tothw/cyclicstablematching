@@ -5,21 +5,29 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 
-public class PerfectMatching implements Comparable<PerfectMatching>{
+public class Matching implements Comparable<Matching>{
 	
+	//number of genders
 	private final int NUMBER_OF_GROUPS;
+	//number of agents per gender
 	private final int NUMBER_OF_AGENTS;
 	
 	//Store matching
 	ArrayList<int[]> matching;
+	//string which represents matching
 	private String hash;
 
-	public PerfectMatching(int numberOfGroups, int numberOfAgents) {
+	public Matching(int numberOfGroups, int numberOfAgents) {
 		NUMBER_OF_GROUPS = numberOfGroups;
 		NUMBER_OF_AGENTS = numberOfAgents;
 		matching = new ArrayList<int[]>(numberOfGroups);
 	}
 
+	/**
+	 * Converts list of permutations to a matching
+	 * @param permutationProduct list of size NUMBER_OF_GROUPS where each
+	 *  int[] is a permutation of [0,..., NUMBER_OF_AGENTS - 1]
+	 */
 	public void setMatchingFromPermutations(ArrayList<int[]> permutationProduct) {
 		for (int i = 0; i < NUMBER_OF_AGENTS; ++i) {
 			int[] match = new int[NUMBER_OF_GROUPS];
@@ -35,6 +43,10 @@ public class PerfectMatching implements Comparable<PerfectMatching>{
 		sortAndHash();
 	}
 
+	/**
+	 * Arranges matching tuples in lex order, and
+	 * Computes hash string
+	 */
 	private void sortAndHash() {
 		Collections.sort(matching, new Comparator<int[]>() {
 			@Override
@@ -59,11 +71,22 @@ public class PerfectMatching implements Comparable<PerfectMatching>{
 		hash = sb.toString();
 	}
 
+	/**
+	 * sets matching from matching
+	 * @param matching NUMBER_OF_AGENTS tuples of sizes NUMBER_OF_GROUPS
+	 * int[]'s should have disjoint intersection
+	 */
 	public void setMatching(ArrayList<int[]> matching) {
 		this.matching = matching;
 		sortAndHash();
 	}
 	
+	/**
+	 * returns index of partner that agent in group has preference over
+	 * @param group index of gender agent belongs to
+	 * @param agent index of agent
+	 * @return
+	 */
 	public int getPartner(int group, int agent) {
 		int partner = -1;
 		for(int[] match : matching) {
@@ -74,10 +97,17 @@ public class PerfectMatching implements Comparable<PerfectMatching>{
 		return partner;
 	}
 
+	/**
+	 * 
+	 * @return list of tuples representing matching
+	 */
 	public ArrayList<int[]> getMatching() {
 		return matching;
 	}
 
+	/**
+	 *  Pretty prints matching
+	 */
 	public String toString() {
 		StringBuffer stringBuffer = new StringBuffer();
 		stringBuffer.append("---------\n");
@@ -93,6 +123,9 @@ public class PerfectMatching implements Comparable<PerfectMatching>{
 		return stringBuffer.toString();
 	}
 
+	/**
+	 * Standard Getters
+	 */
 	public int getNUMBER_OF_GROUPS() {
 		return NUMBER_OF_GROUPS;
 	}
@@ -105,7 +138,11 @@ public class PerfectMatching implements Comparable<PerfectMatching>{
 		return hash;
 	}
 
-	public int compareTo(PerfectMatching perfectMatching) {
+	/**
+	 * Matchings are compared lexicographically via hash strings,
+	 * hence the need to sort.
+	 */
+	public int compareTo(Matching perfectMatching) {
 		return hash.compareTo(perfectMatching.getHash());
 	}
 
@@ -114,7 +151,7 @@ public class PerfectMatching implements Comparable<PerfectMatching>{
 		if(obj.getClass() != getClass()) {
 			return false;
 		}
-		PerfectMatching perfectMatching = (PerfectMatching)obj;
+		Matching perfectMatching = (Matching)obj;
 		return hash.equals(perfectMatching.getHash());
 	}
 
@@ -126,6 +163,9 @@ public class PerfectMatching implements Comparable<PerfectMatching>{
 		return hash.hashCode();
 	}
 
+	/**
+	 * @return true iff matching is proper
+	 */
 	public boolean validate() {
 		for(int[] match : matching) {
 			for(int i = 0; i < match.length; ++i) {
@@ -139,7 +179,12 @@ public class PerfectMatching implements Comparable<PerfectMatching>{
 		return true;
 	}
 
-	public PerfectMatching extend(int[] permutation) {
+	/**
+	 * 
+	 * @param permutation a NUMBER_OF_AGENTS size permutation
+	 * @return matching with additional gender taken by appending permutation
+	 */
+	public Matching extend(int[] permutation) {
 		if(permutation.length != NUMBER_OF_AGENTS) {
 			System.out.println("Cannot extend with given permutation: " + Arrays.toString(permutation));
 			return null;
@@ -155,11 +200,17 @@ public class PerfectMatching implements Comparable<PerfectMatching>{
 			extendedMatching.add(extendedMatch);
 			++k;
 		}
-		PerfectMatching retval = new PerfectMatching(getNUMBER_OF_GROUPS() + 1, getNUMBER_OF_AGENTS());
+		Matching retval = new Matching(getNUMBER_OF_GROUPS() + 1, getNUMBER_OF_AGENTS());
 		retval.setMatching(extendedMatching);
 		return retval;
 	}
 	
+	/**
+	 * 
+	 * @param group index of gender
+	 * @param agent index of agent in gender
+	 * @return true iff agent has a partner in this matching
+	 */
 	public boolean isMatchedInGroup(int group, int agent) {
 		for(int[] match : matching) {
 			if(match[group] == agent) {

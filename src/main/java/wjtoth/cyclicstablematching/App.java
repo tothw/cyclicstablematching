@@ -5,7 +5,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -21,22 +20,34 @@ import java.util.Set;
  */
 public class App {
 	public static void main(String[] args) throws InterruptedException, ExecutionException {
-		final int NUMBER_OF_GROUPS = 3;
-		final int NUMBER_OF_AGENTS = 5;
-
 		Scanner scanner = new Scanner(System.in);
 		System.out.println("Check System?(y/n)");
 		char checkSystem = scanner.nextLine().toLowerCase().charAt(0);
+		
 		if (checkSystem == 'y') {
 			System.out.println("Input system to test:");
 			checkSystem(scanner);
 		} else {
+			//DFS for 3 genders and 5 agents each gender
+			final int NUMBER_OF_GROUPS = 3;
+			final int NUMBER_OF_AGENTS = 5;
 			System.out.println("Performing Search");
 			depthFirstSearch(NUMBER_OF_GROUPS, NUMBER_OF_AGENTS);
 		}
 
 	}
 
+	/**
+	 * Check a given preferenceSystem for stability on either
+	 * a collection of matchings
+	 * or all possible.
+	 * 
+	 *  Input format: numberofGroups numberOfAgents then
+	 *  integers in ranked order for each agent starting with group 0 agent 0
+	 *  down to group numberOfGroups-1 agent numberOfAgents-1
+	 *  followed by numberOfMatchingsToCheck (-1 if all possible) and
+	 *  if not -1 then specify matchings via integers tuple by tuple
+	 */
 	private static void checkSystem(Scanner scanner) {
 		int numberOfGroups = scanner.nextInt();
 		int numberOfAgents = scanner.nextInt();
@@ -68,9 +79,9 @@ public class App {
 			System.out.println(stabilityChecker.checkAllPossible());
 
 		} else {
-			ArrayList<PerfectMatching> matchingsToCheck = new ArrayList<PerfectMatching>();
+			ArrayList<Matching> matchingsToCheck = new ArrayList<Matching>();
 			for (int i = 0; i < numMatchingsToCheck; ++i) {
-				PerfectMatching perfectMatching = new PerfectMatching(numberOfGroups, numberOfAgents);
+				Matching perfectMatching = new Matching(numberOfGroups, numberOfAgents);
 				ArrayList<int[]> matching = new ArrayList<int[]>();
 				for (int j = 0; j < numberOfAgents; ++j) {
 					int[] match = new int[numberOfGroups];
@@ -82,7 +93,7 @@ public class App {
 				perfectMatching.setMatching(matching);
 				matchingsToCheck.add(perfectMatching);
 			}
-			for (PerfectMatching perfectMatching : matchingsToCheck) {
+			for (Matching perfectMatching : matchingsToCheck) {
 				System.out.println("Checking matching:");
 				System.out.println(perfectMatching);
 				System.out.println("Is Stable : " + stabilityChecker.isStable(perfectMatching));
@@ -91,122 +102,13 @@ public class App {
 		System.out.println("Done checking");
 	}
 
-	private static void spaceSearch(final int NUMBER_OF_GROUPS, final int NUMBER_OF_AGENTS)
-			throws InterruptedException, ExecutionException {
-
-		List<PreferenceSystem> toCheckQueue = new LinkedList<PreferenceSystem>();
-		List<PreferenceSystem> toExtendQueue = new LinkedList<PreferenceSystem>();
-		PreferenceSystem initialPreferenceSystem = new PreferenceSystem(NUMBER_OF_GROUPS, NUMBER_OF_AGENTS);
-
-		toCheckQueue.add(initialPreferenceSystem);
-
-		System.out.println("Constructing Stability Checker");
-
-		StabilityChecker stabilityChecker = new StabilityChecker(NUMBER_OF_AGENTS, NUMBER_OF_GROUPS);
-
-		System.out.println("Done constructing Stability Checker");
-
-		int sizeCount = 0;
-
-		while (!toCheckQueue.isEmpty() || !toExtendQueue.isEmpty()) {
-			if (toCheckQueue.isEmpty()) {
-				System.out.println("Extending " + toExtendQueue.size() + " systems");
-				int previousSize = NUMBER_OF_AGENTS * NUMBER_OF_AGENTS * NUMBER_OF_GROUPS + 1;
-				if (!toExtendQueue.isEmpty()) {
-					if (toExtendQueue.get(0).size() % NUMBER_OF_AGENTS * NUMBER_OF_GROUPS == 0 || true) {
-						toExtendQueue = filterSymmetries(toExtendQueue);
-					}
-				}
-				while (!toExtendQueue.isEmpty()) {
-					PreferenceSystem preferenceSystem = toExtendQueue.remove(0);
-					if (preferenceSystem.size() > previousSize) {
-						toExtendQueue.add(preferenceSystem);
-						break;
-					}
-					previousSize = preferenceSystem.size();
-					toCheckQueue.add(preferenceSystem);
-				}
-				System.out.println("Done Extending: " + toExtendQueue.size() + " remain");
-			}
-			if (!toCheckQueue.isEmpty()) {
-				System.out.println("Processing " + toCheckQueue.size() + " Inputs");
-				List<List<PreferenceSystem>> extensions = processInputs(toCheckQueue, stabilityChecker);
-				for (List<PreferenceSystem> extension : extensions) {
-					if (!extension.isEmpty() && extension.get(0).size() >= sizeCount) {
-						System.out.println("Extensions size: " + extensions.size());
-						System.out.println(extension.get(0));
-						System.out.println(extension.get(0).computeHash());
-						++sizeCount;
-					}
-					toExtendQueue.addAll(extension);
-				}
-				System.out.println("Done Processing");
-			}
-		}
-		System.out.println("DONE!");
-	}
-
-	/*
-	 * *Method to Parallelize Computation
+	/**
+	 * Main DFS algorithm starting with empty preference system and extending
+	 * searching for either a counterexample system with no stable matching
+	 * or verifying that all systems have a stable matching
+	 * @param NUMBER_OF_GROUPS
+	 * @param NUMBER_OF_AGENTS
 	 */
-	public static List<List<PreferenceSystem>> processInputs(List<PreferenceSystem> inputs,
-			StabilityChecker stabilityChecker) throws InterruptedException, ExecutionException {
-
-		int threads = Runtime.getRuntime().availableProcessors();
-		ExecutorService service = Executors.newFixedThreadPool(threads);
-
-		List<Future<List<PreferenceSystem>>> futures = new ArrayList<Future<List<PreferenceSystem>>>();
-		for (final PreferenceSystem input : inputs) {
-			Callable<List<PreferenceSystem>> callable = new Callable<List<PreferenceSystem>>() {
-				public List<PreferenceSystem> call() throws Exception {
-					List<PreferenceSystem> output = processPreferenceSystem(input, stabilityChecker);
-					return output;
-				}
-			};
-			futures.add(service.submit(callable));
-		}
-
-		service.shutdown();
-
-		List<List<PreferenceSystem>> outputs = new ArrayList<List<PreferenceSystem>>();
-		for (Future<List<PreferenceSystem>> future : futures) {
-			outputs.add(future.get());
-		}
-		inputs.clear();
-		return outputs;
-	}
-
-	private static List<PreferenceSystem> processPreferenceSystem(PreferenceSystem preferenceSystem,
-			StabilityChecker stabilityChecker) {
-		// preferenceSystem.sortPreferences();
-		stabilityChecker.setPreferenceSystem(preferenceSystem);
-		if (!stabilityChecker.hasStableMatch()) {
-			if (preferenceSystem.size() == preferenceSystem.getNumberOfGroups() * preferenceSystem.getNumberOfAgents()
-					* preferenceSystem.getNumberOfAgents()) {
-				System.out.println("Found Counter Example!");
-				stabilityChecker.setPreferenceSystem(preferenceSystem);
-				System.out.println(stabilityChecker.loudHasStableMatch());
-				System.out.println(preferenceSystem);
-				return new ArrayList<PreferenceSystem>();
-			}
-			return preferenceSystem.extend();
-		}
-
-		return new ArrayList<PreferenceSystem>();
-	}
-
-	private static List<PreferenceSystem> filterSymmetries(List<PreferenceSystem> queue) {
-		System.out.println("Filtering Symmetries");
-		int initalSize = queue.size();
-		System.out.println("Initial Size: " + initalSize);
-		Set<PreferenceSystem> filterSet = new TreeSet<PreferenceSystem>();
-		for (PreferenceSystem preferenceSystem : queue) {
-			filterSet.add(preferenceSystem);
-		}
-		System.out.println("Final Size: " + filterSet.size());
-		return new ArrayList<PreferenceSystem>(filterSet);
-	}
-
 	public static void depthFirstSearch(final int NUMBER_OF_GROUPS, final int NUMBER_OF_AGENTS) {
 		PreferenceSystem initialPreferenceSystem = new PreferenceSystem(NUMBER_OF_GROUPS, NUMBER_OF_AGENTS);
 		PreferenceSystemNode root = new PreferenceSystemNode(initialPreferenceSystem, null);
