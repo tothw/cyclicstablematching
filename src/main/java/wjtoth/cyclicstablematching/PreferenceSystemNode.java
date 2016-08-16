@@ -75,6 +75,24 @@ public class PreferenceSystemNode {
 		for(int i = 0; i<extensionSystem.getNumberOfGroups()-1; ++i) {
 			Group group = extensionSystem.getGroups().get(i);
 			int maxSeen = 0;
+			for(int j = 0; j<group.getGroupSize(); ++j) {
+				for(Agent agent : group.getAgents()) {
+					int preference;
+					try {
+						preference = (int) agent.rankedOrder().toArray()[j];
+					} catch(ArrayIndexOutOfBoundsException e) {
+						continue;
+					}
+					if(preference > maxSeen) {
+						return false;
+					}else {
+						if(preference == maxSeen) {
+							++maxSeen;
+						}
+					}
+				}
+			}
+			/*
 			for(Agent agent : group.getAgents()) {
 				for(int preference : agent.rankedOrder()) {
 					if(preference > maxSeen) {
@@ -86,6 +104,7 @@ public class PreferenceSystemNode {
 					}
 				}
 			}
+			*/
 		}
 		
 		//sorting based reasoning
