@@ -67,24 +67,30 @@ Then for all $c \in C$ define the total order $>_c^\phi$ to be
 $$\{(\phi(a_1),\phi(a_2)) : a_1 >_c a_2 \}.$$
 If the bijection $\phi$ satisfies
 $$a_1 >_c a_2 \implies \phi(a_1) >^\phi_c \phi(a_2)$$
-for all $c \in C$, then the problem instances given by $A,B,C$ with original orders and $\phi(A), B, C$ with each $c\in C$ using order $>_c^\phi$ are symmetric in the sense that a stable matching for one implies a stable matching for the other (and finding second stable matching is given through applying $\phi$ to first stable matching). 
+for all $c \in C$, then the problem instances given by $A,B,C$ with original orders and $\phi(A), B, C$ with each $c\in C$ using order $>_c^\phi$ are symmetric in the sense that a stable matching for one implies a stable matching for the other (and finding second stable matching is given through applying $\phi$ to first stable matching). $\textit{Note: It is still unclear how to test and remove all symmetry effectively}$.
 \paragraph{}
-Our general algorithm is as follows
+Our general algorithm is a depth search working as follows (we will explain preference system nodes below) algorithm:
 \begin{enumerate}
 \item Initialize a preference system of size $n=5$ with empty partial orders
-\item Create a queue of preference systems $Q$. Add inital system to $Q$.
-\item While $Q \neq \emptyset$
+\item Create a preference system node $PSNode$ and have it store the empty preference system.
+\item While $PSNode$ has next:
 \begin{enumerate}
-\item Let $P$ be preference system at head of $Q$. Remove $P$ from $Q$.
+\item Let $PSNode$ be $PSNode.next()$. Let $P$ be preference system of $PSNode$.
 \item Test if $P$ is satisfies a sufficient condition for stable matching.
-\item If not, enumerate all matchings and test if one is a complete stable matching for $P$
-\item If both tests fail then extend preference list of one agent in $P$ with shortest length list in all possible ways. Call the set of extensions $\cP$.
-\item If $\cP = \emptyset$ then $P$ is a counterexample.
-\item Add all $P' \in \cP$ not symmetric to a system in $Q$ to $Q$.
+\item If so set $PSNode$ to $PSNode.parent()$.
+\item If not and $P$ is a complete preference system (all orders are complete) then you have found a counterexample
 \end{enumerate}
-\item If no counterexample is found then conjecture holds for $n=5$.
-\end{enumerate}
-\section{Sufficient Checks}
+\item If all nodes are exhausted, and no counterexample is found, then conjecture holds for $n=5$.
+\section{Preference System Nodes}
+\paragraph{}
+Preference System Nodes are a data structure that contains the data necessary to work through our depth first search. We think of preference systems which need to be searched as being in a tree structure which we will depth first search for a counterexample.
+\paragraph{}
+A Preference System Node stores a few things: the preference system of partial ordered preferences which is to be checked at this node, the parent Preference System Node that this node descends from, and the children Nodes which are to be explored after this node.
+\paragraph{}
+The $parent()$ method returns the parent Preference System Node. The $next()$ method is slightly more nuanced. It returns an unexplored child of $PSNode$ if one exists and it returns the parent node otherwise. The children of a $PSNode$ are defined based on an extender agent. Consider the preference system data in $PSNode$. The extender agent is the agen in the preference system with the shortest preference list of acceptable matches, subject to that it has the lowest group number index, and subject to that it has the lowest agent number index (thus it is unique). For each unacceptable match for $PSNode$'s extender agent, there is a child of $PSNode$ where that unacceptable match is appended as the lowest ranked acceptable match of extender agent. 
+\paragraph{}
+Note that in the current implementation we reduce symmetry by eliminating child nodes that are not lexicographically (when all partial preference orders are appended as a string) minimal. These checks are in a state of change at present.
+\section{Sufficient Checks and Stability}
 \paragraph{}
 We use the following sufficient conditions to decide if a preference system has a Stable Matching before enumerating possible matchings:
 \begin{itemize}
@@ -93,4 +99,6 @@ We use the following sufficient conditions to decide if a preference system has 
 \item Existence of a triple $(a,b,c) \in A\times B\times C$ where $b$ is first choice of $a$, $c$ is first choice of $b$, and $a$ is first choice of $c$. We call this a first choice $3$-cycle.
 \item Existence of a first choice $9$-cycle.
 \end{itemize}
+\paragraph{}
+These conditions have been generalized in a check for a sufficient matching as: if we can find a stable partial matching wherein each matched agent has all agents they prefer to their partner matched then we can remove the matched vertices and complete the stable matching by induction. We check for such stable partial matchings in our implementation if none of the above sufficient conditions (which are faster to check as special cases) hold.
 \end{document}
