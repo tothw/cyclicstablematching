@@ -96,7 +96,7 @@ public class App {
 			for (Matching perfectMatching : matchingsToCheck) {
 				System.out.println("Checking matching:");
 				System.out.println(perfectMatching);
-				System.out.println("Is Stable : " + stabilityChecker.isStable(perfectMatching));
+				System.out.println("Is Stable : " + stabilityChecker.loudIsStable(perfectMatching));
 			}
 		}
 		System.out.println("Done checking");

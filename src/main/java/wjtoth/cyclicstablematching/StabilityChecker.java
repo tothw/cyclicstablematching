@@ -415,7 +415,7 @@ public class StabilityChecker {
 			}
 			if (!invalidBlocker && isBlocking(blocker, perfectMatching)) {
 				if (loud) {
-					System.out.println("Is Blocking");
+					System.out.println("Blocking Triple: " + blocker.toString());
 				}
 				return false;
 			}
@@ -423,6 +423,18 @@ public class StabilityChecker {
 		return true;
 	}
 
+	/**
+	 * loud isStable
+	 * @param perfectMatching
+	 * @return
+	 */
+	public boolean loudIsStable(Matching perfectMatching) {
+		loud = true;
+		boolean stableFlag =  isStable(perfectMatching);
+		loud = false;
+		return stableFlag;
+	}
+	
 	/**
 	 * true iff blocker blocks matching
 	 * @param blocker
