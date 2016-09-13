@@ -27,6 +27,8 @@ public class Agent implements Comparable<Agent> {
 	private int acceptablePartnerCount = 0;
 	//set of partners agent finds unacceptable
 	private Set<Integer> unacceptablePartners;
+
+	private int lastChoice;
 	
 	public Agent(int partnerGroupSize, int index, int groupIndex) {
 		preferences = new int[partnerGroupSize];
@@ -36,6 +38,7 @@ public class Agent implements Comparable<Agent> {
 		}
 		this.index = index;
 		this.groupIndex = groupIndex;
+		this.lastChoice = -1;
 	}
 	
 	public int[] getPreferences() {
@@ -109,7 +112,17 @@ public class Agent implements Comparable<Agent> {
 	}
 	
 	public Set<Integer> getUnacceptablePartners() {
-		return unacceptablePartners;
+		if(lastChoice > -1) {
+			return unacceptablePartners;
+		} else {
+			if(acceptablePartnerCount == preferences.length-1) {
+				Set<Integer> lastChoiceSet = new HashSet<>();
+				lastChoiceSet.add(lastChoice);
+				return lastChoiceSet;
+			} else {
+				return unacceptablePartners;
+			}
+		}
 	}
 	
 	//copy
@@ -118,6 +131,7 @@ public class Agent implements Comparable<Agent> {
 		for(int i = 0; i<preferences.length; ++i) {
 			agent.setAgentPreference(i, preferences[i]);
 		}
+		agent.fixLastChoice(lastChoice);
 		return agent;
 	}
 	
@@ -187,5 +201,14 @@ public class Agent implements Comparable<Agent> {
 			sb.append('?');
 		}
 		return sb.toString();
+	}
+
+	public boolean fixLastChoice(int agentIndex) {
+		if(lastChoice > -1 || !unacceptablePartners.contains(agentIndex)) {
+			return false;
+		}
+		lastChoice = agentIndex;
+		unacceptablePartners.remove(lastChoice);
+		return true;
 	}
 }

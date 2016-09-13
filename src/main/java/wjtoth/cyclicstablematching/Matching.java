@@ -17,10 +17,14 @@ public class Matching implements Comparable<Matching>{
 	//string which represents matching
 	private String hash;
 
+	//number of non-empty matches
+	private int size;
+
 	public Matching(int numberOfGroups, int numberOfAgents) {
 		NUMBER_OF_GROUPS = numberOfGroups;
 		NUMBER_OF_AGENTS = numberOfAgents;
 		matching = new ArrayList<int[]>(numberOfGroups);
+		size = -1;
 	}
 
 	/**
@@ -219,6 +223,35 @@ public class Matching implements Comparable<Matching>{
 				}else{
 					return false;
 				}
+			}
+		}
+		return false;
+	}
+
+	public int size() {
+		if(size == -1) {
+			int count = 0;
+			for (int[] match : matching) {
+				boolean nonNegative = true;
+				for (int i = 0; i < match.length; ++i) {
+					if (match[i] == -1) {
+						nonNegative = false;
+						break;
+					}
+				}
+				if (nonNegative) {
+					++count;
+				}
+			}
+			size = count;
+		}
+		return size;
+	}
+
+	public boolean inMatching(int groupIndex, int agentIndex) {
+		for(int[] match : matching) {
+			if(match[groupIndex] == agentIndex) {
+				return true;
 			}
 		}
 		return false;

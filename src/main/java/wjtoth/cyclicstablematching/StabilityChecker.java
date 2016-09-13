@@ -1,5 +1,6 @@
 package wjtoth.cyclicstablematching;
 
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -286,7 +287,7 @@ public class StabilityChecker {
 
 	// assumes all groups have same size!
 	/**
-	 * Attempts a stable matching of prefernce system
+	 * Attempts a stable matching of preference system
 	 */
 	public void attemptStableMatch() {
 		if (lastSuccessfulMatching != null) {
@@ -314,6 +315,12 @@ public class StabilityChecker {
 			}
 			validMatchingFlag = false;
 			for (Matching perfectMatching : matchingsOfASize) {
+				if (perfectMatching.size() == preferenceSystem.getNumberOfAgents() - 2) {
+					checkNearStable(perfectMatching);
+					if(hasStableMatch) {
+						return;
+					}
+				}
 				if (loud) {
 					System.out.println(perfectMatching);
 				}
@@ -329,6 +336,43 @@ public class StabilityChecker {
 						return;
 					}
 				}
+			}
+		}
+	}
+
+	private void checkNearStable(Matching perfectMatching) {
+		List<Agent> discontentAgents = new ArrayList<>();
+		for(int groupIndex = 0; groupIndex<preferenceSystem.getNumberOfGroups(); ++groupIndex) {
+			for(int agentIndex = 0; agentIndex < preferenceSystem.getNumberOfAgents(); ++agentIndex) {
+				blockers.reset();
+				while(blockers.hasNext()) {
+					ArrayList<Integer> blocker = blockers.next();
+					if(isBlocking(blocker, perfectMatching)) {
+						for(int i = 0; i<blocker.size(); ++i) {
+							if(perfectMatching.inMatching(i, blocker.get(i))) {
+								Agent agent = preferenceSystem.getAgents(i).get(blocker.get(i));
+								if(!discontentAgents.isEmpty() && !discontentAgents.contains(agent)) {
+									return;
+								} else{
+									if(discontentAgents.isEmpty()) {
+										discontentAgents.add(agent);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			if(discontentAgents.isEmpty()) {
+				//by induction
+				hasStableMatch = true;
+				return;
+			}
+			Agent discontentAgent = discontentAgents.get(0);
+			int matchIndex = perfectMatching.getPartner(discontentAgent.getGroupIndex(), discontentAgent.getIndex());
+			boolean noContradiction = discontentAgent.fixLastChoice(matchIndex);
+			if(!noContradiction) {
+				hasStableMatch = true;
 			}
 		}
 	}
