@@ -102,4 +102,16 @@ We use the following sufficient conditions to decide if a preference system has 
 \end{itemize}
 \paragraph{}
 These conditions have been generalized in a check for a sufficient matching as: if we can find a stable partial matching wherein each matched agent has all agents they prefer to their partner matched then we can remove the matched vertices and complete the stable matching by induction. We check for such stable partial matchings in our implementation if none of the above sufficient conditions (which are faster to check as special cases) hold.
+\paragraph{Lemma}
+Let $P$ be a complete preference system of $3$ genders with $n$ agents where $n-1$ is the best known size such that every complete preference system with $3$ genders and at most $n-1$ agents per gender has a stable matching. Suppose that $P$ has a partial matching $M$ which has no blocking triples among agents matched in $M$. If for every agent $a$ matched in $M$, for every agent $b$ such that $b >_a M(a)$ we have that $b$ is matched in $M$ then $P$ has a stable matching.
+\paragraph{Proof}
+Let $P'$ be the preference system with the agents of $P$ minus those matched in $M$. By the "inductive hypothesis (re. best known $n$)" we can find a stable matching of $P'$, call it $M'$. Consider the perfect matching in $P$ given by $S = M \cup M'$. We claim that $S$ is stable for $P$. Suppose for a contradiction that $P$ has a blocking triple $(a,b,c)$. Since $M'$ is stable for $P'$ and $M$ has no blocking triples among agents matched in $M$, the blocking triple $(a,b,c)$ must use both agents matched in $M$ and $M'$. Without loss suppose $a$ is matched in $M$ (that is $S(a) = M(a)$). Since $(a,b,c)$ is a blocking triple, $b >_a S(a) = M(a)$. Then by our hypothesis $b$ is matched in $M$. Again, since $(a,b,c)$ is a blocking triple, $c >_b S(b) = M(b)$ and by our hypothesis $c$ is matched in $M$. Then $(a,b,c)$ consists entirely of agents matched in $M$, a contradiction. $\blacksquare$
+\paragraph{Corollary}
+Let $P$ be a preference system of $3$ genders and $n$ agents as above. If there exists agents $a,b,c$ of $P$ such that $b$ is $a'$ first choice, $c$ is $b$'s first choice, and $a$ is $c$'s first choice (we call this a first choice $3$ cycle) then $P$ has a stable matching.
+\paragraph{Proof}
+Invoke above lemma with matching $M = \{ (a,b,c)\}$.$\blacksquare$
+\paragraph{Corollary}
+Let $P$ be a preference system of $3$ genders and $n$ agents as above. If there is a gender such that every agent of that gender has the same first choice then $P$ has a stable matching.
+\paragraph{Proof}
+Let $a_1, \dots, a_n$ be the agents of gender who all agree on their first choice. Let $b$ be the first choice of $a_1, \dots, a_n$. Let $c$ be the first choice of $b$. Then there exists some $a_k$ such that $a_k$ is the first choice of $c$. So $(a_k, b,c)$ form a first choice $3$ cycle and we may invoke the previous Corollary to complete the proof. $\blacksquare$
 \end{document}
