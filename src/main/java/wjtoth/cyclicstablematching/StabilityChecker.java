@@ -188,9 +188,8 @@ public class StabilityChecker {
 	private boolean sufficientChecks() {
 		checkFirstChoiceCycle();
 		if (!hasStableMatch) {
-			checkFirstChoiceNineCycle();
+			checkAllSameDifferent();
 		}
-		checkAllSameDifferent();
 		return hasStableMatch;
 	}
 
@@ -211,29 +210,6 @@ public class StabilityChecker {
 				return;
 			}
 			partnerIndex = preferenceSystem.getAgents(i).get(partnerIndex).getFirstChoice();
-		}
-		if (agent.getIndex() == partnerIndex) {
-			hasStableMatch = true;
-		}
-	}
-
-	private void checkFirstChoiceNineCycle() {
-		for (Agent agent : preferenceSystem.getAgents(0)) {
-			checkFirstChoiceNineCycle(agent);
-			if (hasStableMatch) {
-				break;
-			}
-		}
-	}
-
-	private void checkFirstChoiceNineCycle(Agent agent) {
-		int agentFirstChoice = agent.getFirstChoice();
-		int partnerIndex = agentFirstChoice;
-		for (int i = 1; i < 3 * preferenceSystem.getGroups().size(); ++i) {
-			if (partnerIndex == -1) {
-				return;
-			}
-			partnerIndex = preferenceSystem.getAgents(i % 3).get(partnerIndex).getFirstChoice();
 		}
 		if (agent.getIndex() == partnerIndex) {
 			hasStableMatch = true;

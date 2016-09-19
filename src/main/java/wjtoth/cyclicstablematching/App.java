@@ -3,16 +3,8 @@ package wjtoth.cyclicstablematching;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.TreeSet;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.Scanner;
-import java.util.Set;
 
 /**
  * Hello world!
@@ -92,6 +84,7 @@ public class App {
 				}
 				perfectMatching.setMatching(matching);
 				matchingsToCheck.add(perfectMatching);
+				System.out.println("Read in matching");
 			}
 			for (Matching perfectMatching : matchingsToCheck) {
 				System.out.println("Checking matching:");
