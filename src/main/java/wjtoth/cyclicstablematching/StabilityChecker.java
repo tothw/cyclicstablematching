@@ -21,6 +21,10 @@ public class StabilityChecker {
 	//matching to use in search of stable matching
 	private ArrayList<Matching[]> matchings;
 
+	//matchings of one gender to anther;
+	// used in some sufficient checks
+	private ArrayList<Matching[]> oneGenderMatchings;
+
 	//caches last stable match in hopes that next preference system
 	//to check will also be stable under this matching
 	//TODO investigate how often this is even useful
@@ -40,7 +44,8 @@ public class StabilityChecker {
 		}
 		blockers = new CrossProduct<Integer>(agents, numberOfGroups);
 		matchings = new ArrayList<Matching[]>();
-		buildMatchings(numberOfAgents, numberOfGroups);
+		matchings = buildMatchings(numberOfAgents, numberOfGroups);
+		oneGenderMatchings = buildMatchings(numberOfAgents,2);
 		loud = false;
 	}
 	
@@ -50,7 +55,8 @@ public class StabilityChecker {
 	 * @param numberOfAgents
 	 * @param numberOfGroups
 	 */
-	private void buildMatchings(int numberOfAgents, int numberOfGroups) {
+	private ArrayList<Matching[]> buildMatchings(int numberOfAgents, int numberOfGroups) {
+		ArrayList<Matching[]> matchings = new ArrayList<>();
 		//Obtain all permutations of subsets of [0, ..., numberOfAgents-1]
 		List<int[]> permutations = new ArrayList<>();
 		for (PermutationArray permutationArray : Permutations.permutationsOfAllSubsets(numberOfAgents)) {
@@ -75,6 +81,7 @@ public class StabilityChecker {
 		//Matchings now is a list of lists of matchings of a given length
 		//length means number of tuples in matching
 		System.out.println("Done Processing Permutations");
+		return matchings;
 	}
 
 	/**
@@ -186,9 +193,13 @@ public class StabilityChecker {
 	 * stable matching is satisfied
 	 */
 	private boolean sufficientChecks() {
-		checkFirstChoiceCycle();
+		//generalized in stable match check
+		//checkFirstChoiceCycle();
 		if (!hasStableMatch) {
 			checkAllSameDifferent();
+		}
+		if(!hasStableMatch) {
+			checkStabilizeGender();
 		}
 		return hasStableMatch;
 	}
@@ -245,13 +256,16 @@ public class StabilityChecker {
 		if (loud) {
 			System.out.println("First Choices: " + Arrays.toString(firstChoices));
 		}
+		/**SKIPPING TO TEST GENERALIZATION
+		 *
+
 		if (firstChoices[0] == 0 && firstChoices[firstChoices.length - 1] == firstChoices.length - 1) {
 			hasStableMatch = true;
 			if (loud) {
 				System.out.println("All Different");
 			}
 			return;
-		}
+		}**/
 		int choice = firstChoices[0];
 		if (firstChoices[firstChoices.length - 1] == choice) {
 			hasStableMatch = true;
@@ -351,6 +365,59 @@ public class StabilityChecker {
 				hasStableMatch = true;
 			}
 		}
+	}
+
+	private void checkStabilizeGender() {
+		for(Matching[] matchingArray : oneGenderMatchings) {
+			for(Matching matching : matchingArray) {
+				if(checkStabilizeGender(matching)) {
+					hasStableMatch = true;
+					return;
+				}
+			}
+		}
+	}
+
+	private boolean checkStabilizeGender(Matching matching) {
+		ArrayList<Group> groups = preferenceSystem.getGroups();
+		for(int i = 0 ; i<preferenceSystem.getNumberOfGroups(); ++i) {
+			Group groupA = groups.get(i);
+			Group groupB = groups.get((i+1) % preferenceSystem.getNumberOfGroups());
+			if(checkStabilizeGender(matching,groupA,groupB)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean checkStabilizeGender(Matching matching, Group groupA, Group groupB) {
+		ArrayList<Agent> BPrime = new ArrayList<>();
+		for(Agent a : groupA.getAgents()) {
+			if(!matching.isMatchedInGroup(0, a.getIndex())) {
+				return false;
+			}
+			int partnerOfA = matching.getPartner(0,a.getIndex());
+			if(a.getUnacceptablePartners().contains(partnerOfA)) {
+				return false;
+			}
+			for(Agent b : groupB.getAgents()) {
+				if(a.prefers(b.getIndex(), partnerOfA)) {
+					if(!BPrime.contains(b)) {
+						BPrime.add(b);
+					}
+				}
+			}
+		}
+		List<Integer> firstChoices = new ArrayList<>();
+		for(Agent b : BPrime) {
+			int firstChoice = b.getFirstChoice();
+			if(firstChoices.contains(firstChoice)) {
+				return false;
+			}else {
+				firstChoices.add(firstChoice);
+			}
+		}
+		return true;
 	}
 
 	/**
