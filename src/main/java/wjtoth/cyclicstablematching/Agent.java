@@ -179,7 +179,9 @@ public class Agent implements Comparable<Agent> {
 	//pretty print preference list of agent
 	//as list of partners in ranked order
 	public String toString() {
-		return rankedOrder().toString();
+		String rankedOrder = rankedOrder().toString();
+		String fixedLastChoice = lastChoice >-1 ? " Last Choice = "+ lastChoice : "";
+		return rankedOrder + fixedLastChoice;		
 	}
 	
 	//true if <= in terms of preference system
