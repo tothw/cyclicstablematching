@@ -213,4 +213,14 @@ public class Agent implements Comparable<Agent> {
 		unacceptablePartners.remove(lastChoice);
 		return true;
 	}
+	
+	public int getFirstUnmatchedChoice(Matching matching) {
+		int groupIndex = (getGroupIndex() + 1) % matching.getNUMBER_OF_GROUPS();
+		for(Integer i : rankedOrder()) {
+			if(!matching.isMatchedInGroup(groupIndex, i)) {
+				return i;
+			}
+		}
+		return -1;
+	}
 }
