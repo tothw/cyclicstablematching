@@ -1,8 +1,12 @@
 package wjtoth.cyclicstablematching;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
+
+import javax.swing.event.ListSelectionEvent;
 
 /**
  * Utility class of static methods for
@@ -20,7 +24,7 @@ public class Permutations {
 
 	//compute permutations of all subsets of [0,...,n-1]
 	//each subset has permutationArray in its own position in List
-	public static List<PermutationArray> permutationsOfAllSubsets(int n) {
+	public static Set<PermutationArray> permutationsOfAllSubsets(int n) {
 		return permutationsOfAllSubsets(array(n));
 	}
 	
@@ -36,11 +40,11 @@ public class Permutations {
 	//helper of permutationsOfAllSubsets(int n)
 	//alternatively can be used to compute all permutation of all subsets
 	//of elements in array
-	public static List<PermutationArray> permutationsOfAllSubsets(int[] array) {
+	public static Set<PermutationArray> permutationsOfAllSubsets(int[] array) {
 		int subsets = (int)Math.pow(2, array.length);
 		int[] indices = new int[array.length];
 
-		ArrayList<PermutationArray> retval = new ArrayList<>();
+		Set<PermutationArray> retval = new HashSet<>();
 
 		for(int k = 1; k<subsets; ++k) {
 			int[] subset = new int[array.length];
@@ -54,8 +58,7 @@ public class Permutations {
 			}
 			retval.addAll(permutations(subset));
 		}
-
-		return retval.stream().distinct().collect(Collectors.toList());
+		return retval;
 	}
 
 	//compute all permutations of elements of array

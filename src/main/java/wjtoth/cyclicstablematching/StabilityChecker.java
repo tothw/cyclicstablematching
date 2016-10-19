@@ -2,7 +2,6 @@ package wjtoth.cyclicstablematching;
 
 import java.lang.reflect.Array;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class StabilityChecker {
 
@@ -72,8 +71,7 @@ public class StabilityChecker {
 		// iterate over lengths and compute all matchings for said length
 		for (List<int[]> permutationsOfALength : permutationsSplitByLength) {
 			System.out.println("Processing: " + permutationsOfALength.size() + " permutations");
-			List<Matching> uniqueMatchings = getMatchings(permutationsOfALength, numberOfAgents, numberOfGroups)
-					.stream().distinct().collect(Collectors.toList());
+			Set<Matching> uniqueMatchings = getMatchings(permutationsOfALength, numberOfAgents, numberOfGroups);
 			matchingSet.addAll(uniqueMatchings);
 			Matching[] matchingsArray = new Matching[matchingSet.size()];
 			matchingSet.toArray(matchingsArray);
@@ -95,9 +93,9 @@ public class StabilityChecker {
 	 * @param numberOfGroups
 	 * @return
 	 */
-	private List<Matching> getMatchings(List<int[]> permutations, int numberOfAgents, int numberOfGroups) {
+	private Set<Matching> getMatchings(List<int[]> permutations, int numberOfAgents, int numberOfGroups) {
 		CrossProduct<int[]> crossProduct = new CrossProduct<int[]>(permutations, 2);
-		List<Matching> matchingSet = new LinkedList<>();
+		Set<Matching> matchingSet = new HashSet<>();
 		// Start by matching pairs
 		while (crossProduct.hasNext()) {
 			ArrayList<int[]> match = crossProduct.next();
@@ -113,7 +111,7 @@ public class StabilityChecker {
 		for (int i = 2; i < numberOfGroups; ++i) {
 			matchingSet = extendMatchingsByPermutations(permutations, matchingSet);
 		}
-		return matchingSet.stream().distinct().collect(Collectors.toList());
+		return matchingSet;
 	}
 
 	/**
@@ -124,7 +122,7 @@ public class StabilityChecker {
 	 * @param perfectMatchings
 	 * @return
 	 */
-	private List<Matching> extendMatchingsByPermutations(List<int[]> permutations, List<Matching> perfectMatchings) {
+	private Set<Matching> extendMatchingsByPermutations(List<int[]> permutations, Set<Matching> perfectMatchings) {
 		Set<Matching> retval = new TreeSet<>();
 		for (Matching perfectMatching : perfectMatchings) {
 			for (int[] permutation : permutations) {
@@ -134,7 +132,7 @@ public class StabilityChecker {
 				}
 			}
 		}
-		return retval.stream().distinct().collect(Collectors.toList());
+		return retval;
 	}
 
 	/**

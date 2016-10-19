@@ -1,7 +1,5 @@
 package wjtoth.cyclicstablematching;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.Scanner;
@@ -111,13 +109,13 @@ public class App {
 		StabilityChecker stabilityChecker = new StabilityChecker(NUMBER_OF_AGENTS, NUMBER_OF_GROUPS);
 		System.out.println("Done Constructing Stability Checker");
 
-		Duration printingInterval = Duration.ofMinutes(1);
-		Instant previousInstant = Instant.now();
-		Instant currentInstant = Instant.now();
+		long printingInterval = 1*60*1000; //one minute in milliseconds
+		long previousInstant = System.currentTimeMillis();
+		long currentInstant = System.currentTimeMillis();
 		while (preferenceSystemNode != null && preferenceSystemNode.hasNext()) {
 			PreferenceSystem data = preferenceSystemNode.getData();
-			currentInstant = Instant.now();
-			if (previousInstant.plus(printingInterval).isBefore(currentInstant)) {
+			currentInstant = System.currentTimeMillis();
+			if (currentInstant - previousInstant > printingInterval) {
 				System.out.println(data);
 				System.out.println("System size: " + data.size());
 				previousInstant = currentInstant;
