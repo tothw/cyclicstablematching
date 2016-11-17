@@ -1,18 +1,11 @@
 package wjtoth.cyclicstablematching;
 
-import java.lang.reflect.Array;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class StabilityChecker {
-
-	// PreferenceSystem to be checked for stable matchimg
-	private PreferenceSystem preferenceSystem;
-
-	// flag for existence of stable matching
-	private boolean hasStableMatch;
-
-	// set true for additional printing of behaviour
-	private boolean loud;
 
 	// For matching checking, iterates over blocking tuples
 	private CrossProduct<Integer> blockers;
@@ -24,20 +17,13 @@ public class StabilityChecker {
 	// used in some sufficient checks
 	private ArrayList<Matching[]> oneGenderMatchings;
 
-	// caches last stable match in hopes that next preference system
-	// to check will also be stable under this matching
-	// TODO investigate how often this is even useful
-	private Matching lastSuccessfulMatching = null;
-
 	/**
 	 * Standard constructor
 	 * 
 	 * @param numberOfAgents
 	 * @param numberOfGroups
 	 */
-	public StabilityChecker(int numberOfAgents, int numberOfGroups) {
-		preferenceSystem = new PreferenceSystem(numberOfGroups, numberOfAgents);
-		hasStableMatch = false;
+	public StabilityChecker(int numberOfGroups, int numberOfAgents) {
 		ArrayList<Integer> agents = new ArrayList<Integer>();
 		for (int i = 0; i < numberOfAgents; ++i) {
 			agents.add(i);
@@ -46,7 +32,6 @@ public class StabilityChecker {
 		matchings = new ArrayList<Matching[]>();
 		matchings = buildMatchings(numberOfAgents, numberOfGroups);
 		oneGenderMatchings = buildMatchings(numberOfAgents, 2);
-		loud = false;
 	}
 
 	/**
@@ -95,7 +80,7 @@ public class StabilityChecker {
 	 */
 	private Set<Matching> getMatchings(List<int[]> permutations, int numberOfAgents, int numberOfGroups) {
 		CrossProduct<int[]> crossProduct = new CrossProduct<int[]>(permutations, 2);
-		Set<Matching> matchingSet = new HashSet<>();
+		Set<Matching> matchingSet = new TreeSet<>();
 		// Start by matching pairs
 		while (crossProduct.hasNext()) {
 			ArrayList<int[]> match = crossProduct.next();
@@ -160,453 +145,29 @@ public class StabilityChecker {
 		return retval;
 	}
 
-	/**
-	 * Set preference system to be checked for stable matching
-	 * 
-	 * @param preferenceSystem
-	 */
-	public void setPreferenceSystem(PreferenceSystem preferenceSystem) {
-		this.preferenceSystem = preferenceSystem;
-		hasStableMatch = false;
-	}
-
-	// true iff preference system has
-	// stable matching once extended
-	public boolean hasStableMatch() {
-		hasStableMatch = false;
-		loud = false;
-		// Generalized by new Stable Match check (Claim 1)
-		// But still faster (linear) to run these checks first
-		if (sufficientChecks()) {
-			return hasStableMatch;
+	public boolean isStable(PreferenceSystem preferenceSystem) {
+		boolean checkInductive = checkInductive(preferenceSystem);
+		if(checkInductive) {
+			return true;
 		}
-		if (!hasStableMatch) {
-			// attempt to find a stable matching via (Claim 1)
-			attemptStableMatch();
+		boolean checkGenderStability = checkGenderStability(preferenceSystem);
+		if(checkGenderStability) {
+			return true;
 		}
-		if (loud) {
-			System.out.println("Has Stable: " + hasStableMatch);
-		}
-		return hasStableMatch;
-	}
-
-	/**
-	 * Checks 1st choice 3-cycle and 9-cycle and 1st choice all same and 1st
-	 * choice all different
-	 * 
-	 * @return true iff sufficient condition for extensions to have stable
-	 *         matching is satisfied
-	 */
-	private boolean sufficientChecks() {
-		// generalized in stable match check
-		// checkFirstChoiceCycle();
-		if (!hasStableMatch) {
-			checkAllSameDifferent();
-		}
-		if (!hasStableMatch) {
-			checkStabilizeGender();
-		}
-		return hasStableMatch;
-	}
-
-	/**
-	private void checkFirstChoiceCycle() {
-		for (Agent agent : preferenceSystem.getAgents(0)) {
-			checkFirstChoiceCycle(agent);
-			if (hasStableMatch) {
-				break;
-			}
-		}
-	}
-	**/
-
-	/**
-	private void checkFirstChoiceCycle(Agent agent) {
-		int agentFirstChoice = agent.getFirstChoice();
-		int partnerIndex = agentFirstChoice;
-		for (int i = 1; i < preferenceSystem.getGroups().size(); ++i) {
-			if (partnerIndex == -1) {
-				return;
-			}
-			partnerIndex = preferenceSystem.getAgents(i).get(partnerIndex).getFirstChoice();
-		}
-		if (agent.getIndex() == partnerIndex) {
-			hasStableMatch = true;
-		}
-	}
-	**/
-
-	private void checkAllSameDifferent() {
-		for (Group group : preferenceSystem.getGroups()) {
-			checkAllSameDifferent(group);
-		}
-	}
-
-	private void checkAllSameDifferent(Group group) {
-		int[] firstChoices = new int[group.getGroupSize()];
-		for (int i = 0; i < firstChoices.length; ++i) {
-			firstChoices[i] = group.getAgents().get(i).getFirstChoice();
-		}
-		// check all -1
-		boolean negativeOneChoices = true;
-		for (int i = 0; i < firstChoices.length; ++i) {
-			negativeOneChoices = negativeOneChoices && firstChoices[i] == -1;
-		}
-		if (negativeOneChoices == true) {
-			return;
-		}
-		if (firstChoices.length == 1) {
-			if (firstChoices[0] != -1) {
-				hasStableMatch = true;
-			}
-			return;
-		}
-		Arrays.sort(firstChoices);
-		if (loud) {
-			System.out.println("First Choices: " + Arrays.toString(firstChoices));
-		}
-		/**
-		 * SKIPPING TO TEST GENERALIZATION
-		 *
-		 * 
-		 * if (firstChoices[0] == 0 && firstChoices[firstChoices.length - 1] ==
-		 * firstChoices.length - 1) { hasStableMatch = true; if (loud) {
-		 * System.out.println("All Different"); } return; }
-		 **/
-		int choice = firstChoices[0];
-		if (firstChoices[firstChoices.length - 1] == choice) {
-			hasStableMatch = true;
-			if (loud) {
-				System.out.println("All Same");
-			}
-		}
-	}
-
-	// assumes all groups have same size!
-	/**
-	 * Attempts a stable matching of preference system
-	 */
-	public void attemptStableMatch() {
-		if (lastSuccessfulMatching != null) {
-			if (isComplete(lastSuccessfulMatching) && isStable(lastSuccessfulMatching)) {
-				hasStableMatch = true;
-				return;
-			}
-		}
-		int size = 0;
-		// stores sizes of longest preference list an agent has
-		int maxCardinality = preferenceSystem.getMaxCardinality();
-		boolean validMatchingFlag = true;
-		for (Matching[] matchingsOfASize : matchings) {
-			if (validMatchingFlag == false) {
-				// if no matchings of a smaller size then there is
-				// no reason to check larger matchings
-				break;
-			}
-			++size;
-			// matchings smaller than max cardinality need not be checked
-			// were checked earlier on smaller system and extensions will not
-			// change their effectiveness
-			if (size < maxCardinality || (maxCardinality == 1 && size > 1)) {
-				continue;
-			}
-			validMatchingFlag = false;
-			for (Matching perfectMatching : matchingsOfASize) {
-				List<Agent> discontentAgents = getDiscontentAgents(perfectMatching);
-				checkLemma4_1_2(perfectMatching, discontentAgents);
-				if (perfectMatching.size() == preferenceSystem.getNumberOfAgents() - 2) {
-					checkNearStable(perfectMatching, discontentAgents);
-					if (hasStableMatch) {
-						return;
-					}
-					checkLemma4_1_3(perfectMatching, discontentAgents);
-				}
-
-				if (loud) {
-					System.out.println(perfectMatching);
-				}
-				// checks if matching satisfies conditions of being a matching
-				// that can be used to implicate a stable matching
-				if (isComplete(perfectMatching)) {
-					validMatchingFlag = true;
-					// check for stability
-					if (isStable(perfectMatching)) {
-
-						hasStableMatch = true;
-						lastSuccessfulMatching = perfectMatching;
-						return;
-					}
-				}
-			}
-		}
-	}
-
-	private void checkLemma4_1_2(Matching perfectMatching, List<Agent> discontentAgents) {
-		if(discontentAgents.size() == 0) {
-			return;
-		}
-		int groupIndex = discontentAgents.get(0).getGroupIndex();
-		for(Agent agent : discontentAgents) {
-			if (agent.getGroupIndex() != groupIndex) {
-				return;
-			}
-		}
-		int bIndex = discontentAgents.get(0).getFirstUnmatchedChoice(perfectMatching);
-		for(Agent agent : preferenceSystem.getAgents(groupIndex)) {
-			if(bIndex != agent.getFirstUnmatchedChoice(perfectMatching)) {
-				return;
-			}
-		}
-		hasStableMatch = true;
-	}
-	private void checkLemma4_1_3(Matching perfectMatching, List<Agent> discontentAgents) {
-		
+		return false;
 	}
 	
-	private List<Agent> getDiscontentAgents(Matching perfectMatching) {
-		List<Agent> discontentAgents = new ArrayList<>();
-		for (int groupIndex = 0; groupIndex < preferenceSystem.getNumberOfGroups(); ++groupIndex) {
-			for (int agentIndex = 0; agentIndex < preferenceSystem.getNumberOfAgents(); ++agentIndex) {
-				blockers.reset();
-				while (blockers.hasNext()) {
-					ArrayList<Integer> blocker = blockers.next();
-					if (isBlocking(blocker, perfectMatching)) {
-						for (int i = 0; i < blocker.size(); ++i) {
-							if (perfectMatching.inMatching(i, blocker.get(i))) {
-								Agent agent = preferenceSystem.getAgents(i).get(blocker.get(i));
-								if (!discontentAgents.contains(agent)) {
-									discontentAgents.add(agent);
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		return discontentAgents;
-	}
-
-	private void checkNearStable(Matching perfectMatching, List<Agent> discontentAgents) {
-		if (discontentAgents.isEmpty()) {
-			// by induction
-			hasStableMatch = true;
-			return;
-		}
-		Agent discontentAgent = discontentAgents.get(0);
-		int matchIndex = perfectMatching.getPartner(discontentAgent.getGroupIndex(), discontentAgent.getIndex());
-		boolean noContradiction = discontentAgent.fixLastChoice(matchIndex);
-		if (!noContradiction) {
-			hasStableMatch = true;
-		}
-	}
-
-	private void checkStabilizeGender() {
-		for (Matching[] matchingArray : oneGenderMatchings) {
-			for (Matching matching : matchingArray) {
-				if (checkStabilizeGender(matching)) {
-					hasStableMatch = true;
-					return;
-				}
-			}
-		}
-	}
-
-	private boolean checkStabilizeGender(Matching matching) {
-		ArrayList<Group> groups = preferenceSystem.getGroups();
-		for (int i = 0; i < preferenceSystem.getNumberOfGroups(); ++i) {
-			Group groupA = groups.get(i);
-			Group groupB = groups.get((i + 1) % preferenceSystem.getNumberOfGroups());
-			if (checkStabilizeGender(matching, groupA, groupB)) {
-				return true;
+	private boolean checkInductive(PreferenceSystem preferenceSystem) {
+		for(int size = 0; size < matchings.size(); ++size) {
+			Matching[] matchingsOfASize = matchings.get(size);
+			for(Matching matching : matchingsOfASize) {
+				
 			}
 		}
 		return false;
 	}
-
-	private boolean checkStabilizeGender(Matching matching, Group groupA, Group groupB) {
-		ArrayList<Agent> BPrime = new ArrayList<>();
-		for (Agent a : groupA.getAgents()) {
-			if (!matching.isMatchedInGroup(0, a.getIndex())) {
-				return false;
-			}
-			int partnerOfA = matching.getPartner(0, a.getIndex());
-			if (a.getUnacceptablePartners().contains(partnerOfA)) {
-				return false;
-			}
-			for (Agent b : groupB.getAgents()) {
-				if (a.prefers(b.getIndex(), partnerOfA)) {
-					if (!BPrime.contains(b)) {
-						BPrime.add(b);
-					}
-				}
-			}
-		}
-		List<Integer> firstChoices = new ArrayList<>();
-		for (Agent b : BPrime) {
-			int firstChoice = b.getFirstChoice();
-			if (firstChoices.contains(firstChoice)) {
-				return false;
-			} else {
-				firstChoices.add(firstChoice);
-			}
-		}
-		return true;
-	}
-
-	/**
-	 * true iff all matches are acceptable to agents and all partners preferred
-	 * by an agent to their partner are matched
-	 * 
-	 * @param perfectMatching
-	 * @return
-	 */
-	private boolean isComplete(Matching perfectMatching) {
-		for (int[] match : perfectMatching.getMatching()) {
-			if (!isAcceptable(match) || !isVerified(match, perfectMatching)) {
-				if (loud) {
-					System.out.println("Not complete");
-				}
-				return false;
-			}
-		}
-		if (loud) {
-			System.out.println("Complete");
-		}
-		return true;
-	}
-
-	/**
-	 * true iff all preferred matches to partner are matched
-	 * 
-	 * @param match
-	 * @param perfectMatching
-	 * @return
-	 */
-	private boolean isVerified(int[] match, Matching perfectMatching) {
-		for (int i = 0; i < match.length; ++i) {
-			if (match[i] == -1) {
-				continue;
-			}
-			Agent agent = preferenceSystem.getAgents(i).get(match[i]);
-			int partner = perfectMatching.getPartner(i, match[i]);
-			for (int j = 0; j < preferenceSystem.getNumberOfAgents(); ++j) {
-				if (agent.prefers(j, partner)
-						&& !perfectMatching.isMatchedInGroup((i + 1) % preferenceSystem.getNumberOfGroups(), j)) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
-
-	/**
-	 * true iff all matches are acceptable to matched agents
-	 * 
-	 * @param match
-	 * @return
-	 */
-	private boolean isAcceptable(int[] match) {
-		for (int i = 0; i < match.length; ++i) {
-			int agentIndex = match[i];
-			if (agentIndex == -1) {
-				continue;
-			}
-			int matchPartner = match[(i + 1) % match.length];
-			if (preferenceSystem.getAgents(i).get(agentIndex).getUnacceptablePartners().contains(matchPartner)) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	/**
-	 * true iff no blocking tuples
-	 * 
-	 * @param perfectMatching
-	 * @return
-	 */
-	public boolean isStable(Matching perfectMatching) {
-		blockers.reset();
-		while (blockers.hasNext()) {
-			ArrayList<Integer> blocker = blockers.next();
-			boolean invalidBlocker = false;
-			for (int i = 0; i < preferenceSystem.getNumberOfGroups(); ++i) {
-				int blockingAgent = blocker.get(i);
-				if (!perfectMatching.isMatchedInGroup(i, blockingAgent)) {
-					invalidBlocker = true;
-				}
-			}
-			if (!invalidBlocker && isBlocking(blocker, perfectMatching)) {
-				if (loud) {
-					System.out.println("Blocking Triple: " + blocker.toString());
-				}
-				return false;
-			}
-		}
-		return true;
-	}
-
-	/**
-	 * loud isStable
-	 * 
-	 * @param perfectMatching
-	 * @return
-	 */
-	public boolean loudIsStable(Matching perfectMatching) {
-		loud = true;
-		boolean stableFlag = isStable(perfectMatching);
-		loud = false;
-		return stableFlag;
-	}
-
-	/**
-	 * true iff blocker blocks matching
-	 * 
-	 * @param blocker
-	 * @param perfectMatching
-	 * @return
-	 */
-	private boolean isBlocking(ArrayList<Integer> blocker, Matching perfectMatching) {
-		boolean retval = true;
-		for (int i = 0; i < blocker.size(); ++i) {
-			int agentIndex = blocker.get(i);
-			int blockPartner = blocker.get((i + 1) % blocker.size());
-			int matchPartner = perfectMatching.getPartner(i, agentIndex);
-			if (matchPartner != -1) {
-				retval = retval && preferenceSystem.getAgents(i).get(agentIndex).prefers(blockPartner, matchPartner);
-			}
-		}
-		return retval;
-	}
-
-	// has stable with more output
-	public boolean loudHasStableMatch() {
-		loud = true;
-		System.out.println("Loud: " + loud);
-		sufficientChecks();
-		if (!hasStableMatch) {
-			attemptStableMatch();
-		}
-		return hasStableMatch;
-	}
-
-	/**
-	 * Check all possible matchings, skipping none
-	 * 
-	 * @return
-	 */
-	public boolean checkAllPossible() {
-		for (Matching[] matchingsOfASize : matchings) {
-			for (Matching perfectMatching : matchingsOfASize) {
-				if (isComplete(perfectMatching)) {
-					if (isStable(perfectMatching)) {
-						System.out.println("Stable Matching:");
-						System.out.println(perfectMatching);
-						return true;
-					}
-				}
-			}
-		}
+	
+	private boolean checkGenderStability(PreferenceSystem preferenceSystem) {
 		return false;
 	}
 }
