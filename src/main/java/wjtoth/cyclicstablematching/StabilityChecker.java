@@ -146,6 +146,11 @@ public class StabilityChecker {
 	}
 
 	public boolean isStable(PreferenceSystem preferenceSystem) {
+		if(preferenceSystem.length < 3) {
+			return false;
+		} 
+		return true;
+		/**
 		boolean checkInductive = checkInductive(preferenceSystem);
 		if(checkInductive) {
 			return true;
@@ -154,7 +159,7 @@ public class StabilityChecker {
 		if(checkGenderStability) {
 			return true;
 		}
-		return false;
+		return false;**/
 	}
 	
 	private boolean checkInductive(PreferenceSystem preferenceSystem) {

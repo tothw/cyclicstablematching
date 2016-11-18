@@ -87,8 +87,17 @@ public class App {
 		PreferenceSystem preferenceSystem = new PreferenceSystem(NUMBER_OF_GROUPS, NUMBER_OF_AGENTS);
 		StabilityChecker stabilityChecker = new StabilityChecker(NUMBER_OF_GROUPS, NUMBER_OF_AGENTS);
 		
+		long printingInterval = 1*60*1000; //one minute in milliseconds
+		long previousInstant = System.currentTimeMillis();
+		long currentInstant = System.currentTimeMillis();
+		
 		while (preferenceSystem.hasParent() || preferenceSystem.canExtend()) {
-			System.out.println(preferenceSystem);
+			
+			currentInstant = System.currentTimeMillis();
+			if (currentInstant - previousInstant > printingInterval) {
+				System.out.println(preferenceSystem);
+				previousInstant = currentInstant;
+			}
 			if (!SymmetryChecker.isLexMin(preferenceSystem) || stabilityChecker.isStable(preferenceSystem)) {
 				if (preferenceSystem.hasParent()) {
 					preferenceSystem = preferenceSystem.parent();
