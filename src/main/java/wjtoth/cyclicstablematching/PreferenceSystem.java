@@ -127,6 +127,16 @@ public class PreferenceSystem {
 		return extenderGroup == 0 && extenderAgent == 0 && length == numberOfAgents+1;
 	}
 	
+	public boolean isAcceptable(int group, int agent, int partner) {
+		if(partner == -1) {
+			return true;
+		}
+		if(ranks[group][agent][partner] < numberOfAgents) {
+			return true;
+		}
+		return false;
+	}
+	
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		for(int i = 0; i < numberOfGroups; ++i) {
@@ -138,6 +148,10 @@ public class PreferenceSystem {
 			}
 		}
 		return sb.toString();
+	}
+
+	public boolean prefers(int group, int agent, int lhs, int rhs) {
+		return ranks[group][agent][lhs] < ranks[group][agent][rhs];
 	}
 	
 }
