@@ -143,8 +143,19 @@ public class PreferenceSystem {
 			sb.append("Group " + i + ":\n");
 			for(int j = 0; j < numberOfAgents; ++j) {
 				sb.append(j + ": ");
-				sb.append(Arrays.toString(preferences[i][j]));
-				sb.append("\n");
+				sb.append("[");
+				for(int k = 0; k < numberOfAgents; ++k) {
+					if(preferences[i][j][k] != numberOfAgents) {
+						if(k!= 0) {
+							sb.append(", " + preferences[i][j][k]);
+						} else {
+							sb.append(preferences[i][j][k]);
+						}
+					}  else {
+						break;
+					}
+				}
+				sb.append("]\n");
 			}
 		}
 		return sb.toString();

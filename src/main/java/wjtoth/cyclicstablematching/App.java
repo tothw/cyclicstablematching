@@ -1,7 +1,9 @@
 package wjtoth.cyclicstablematching;
 
-import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.Scanner;
 
 /**
@@ -9,72 +11,69 @@ import java.util.Scanner;
  *
  */
 public class App {
+
+	public static boolean quit = false;
+	public static boolean save = false;
+	public static boolean print = false;
+
 	public static void main(String[] args) throws InterruptedException, ExecutionException {
 		Scanner scanner = new Scanner(System.in);
-		System.out.println("Check System?(y/n)");
-		char checkSystem = scanner.nextLine().toLowerCase().charAt(0);
 
-		if (checkSystem == 'y') {
-			System.out.println("Input system to test:");
-			// checkSystem(scanner);
-			scanner.close();
+		System.out.println("Read System (y/n)?");
+		char c = scanner.nextLine().toLowerCase().charAt(0);
+		final PreferenceSystem preferenceSystem;
+		if (c == 'y') {
+			preferenceSystem = readSystem(scanner);
 		} else {
-			scanner.close();
-			// DFS for 3 genders and 5 agents each gender
-			final int NUMBER_OF_GROUPS = 3;
-			final int NUMBER_OF_AGENTS = 5;
-			System.out.println("Performing Search");
-			depthFirstSearch(NUMBER_OF_GROUPS, NUMBER_OF_AGENTS);
+			preferenceSystem = new PreferenceSystem(3, 5);
 		}
+
+		Thread thread = new Thread() {
+			@Override
+			public void run() {
+				try {
+					depthFirstSearch(preferenceSystem);
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				}
+			}
+		};
+		System.out.println("starting thread");
+		thread.start();
+		inputHandler(scanner);
+		scanner.close();
+
 	}
 
-	/**
-	 * Check a given preferenceSystem for stability on either a collection of
-	 * matchings or all possible.
-	 * 
-	 * Input format: numberofGroups numberOfAgents then integers in ranked order
-	 * for each agent starting with group 0 agent 0 down to group
-	 * numberOfGroups-1 agent numberOfAgents-1 followed by
-	 * numberOfMatchingsToCheck (-1 if all possible) and if not -1 then specify
-	 * matchings via integers tuple by tuple
-	 */
-	/**
-	 * private static void checkSystem(Scanner scanner) { int numberOfGroups =
-	 * scanner.nextInt(); int numberOfAgents = scanner.nextInt();
-	 * PreferenceSystem preferenceSystem = new PreferenceSystem(numberOfGroups,
-	 * numberOfAgents); for (int i = 0; i < numberOfGroups; ++i) { Group group =
-	 * new Group(numberOfAgents, numberOfAgents, i); for (int j = 0; j <
-	 * numberOfAgents; ++j) { Agent agent = new Agent(numberOfAgents, j, i);
-	 * int[] preferences = new int[numberOfAgents]; for (int k = 0; k <
-	 * numberOfAgents; ++k) { int partner = scanner.nextInt();
-	 * preferences[partner] = numberOfAgents - k; }
-	 * agent.setPreferences(preferences); group.setGroupAgent(j, agent); }
-	 * preferenceSystem.setSystemGroup(i, group); }
-	 * System.out.println(preferenceSystem); System.out.println("Matchings to
-	 * check (input -1 to check all possible):"); int numMatchingsToCheck =
-	 * scanner.nextInt(); System.out.println("Read in matchingsToCheck: " +
-	 * numMatchingsToCheck); StabilityChecker stabilityChecker = new
-	 * StabilityChecker(numberOfAgents, numberOfGroups);
-	 * stabilityChecker.setPreferenceSystem(preferenceSystem);
-	 * System.out.println("Constructed checker"); if (numMatchingsToCheck == -1)
-	 * { System.out.println("Checking all possible");
-	 * stabilityChecker.setPreferenceSystem(preferenceSystem);
-	 * System.out.println(stabilityChecker.checkAllPossible());
-	 * 
-	 * } else { ArrayList<Matching> matchingsToCheck = new
-	 * ArrayList<Matching>(); for (int i = 0; i < numMatchingsToCheck; ++i) {
-	 * Matching perfectMatching = new Matching(numberOfGroups, numberOfAgents);
-	 * ArrayList<int[]> matching = new ArrayList<int[]>(); for (int j = 0; j <
-	 * numberOfAgents; ++j) { int[] match = new int[numberOfGroups]; for (int k
-	 * = 0; k < numberOfGroups; ++k) { match[k] = scanner.nextInt(); }
-	 * matching.add(match); } perfectMatching.setMatching(matching);
-	 * matchingsToCheck.add(perfectMatching); System.out.println("Read in
-	 * matching"); } for (Matching perfectMatching : matchingsToCheck) {
-	 * System.out.println("Checking matching:");
-	 * System.out.println(perfectMatching); System.out.println("Is Stable : " +
-	 * stabilityChecker.loudIsStable(perfectMatching)); } }
-	 * System.out.println("Done checking"); }
-	 **/
+	private static PreferenceSystem readSystem(Scanner scanner) {
+		int numberOfGroups = scanner.nextInt();
+		int numberOfAgents = scanner.nextInt();
+		PreferenceSystem preferenceSystem = new PreferenceSystem(numberOfGroups, numberOfAgents);
+
+		int extenderGroup = scanner.nextInt();
+		int extenderAgent = scanner.nextInt();
+		int length = scanner.nextInt();
+		preferenceSystem.extenderGroup = extenderGroup;
+		preferenceSystem.extenderAgent = extenderAgent;
+		preferenceSystem.length = length;
+
+		for (int group = 0; group < numberOfGroups; ++group) {
+			for (int agent = 0; agent < numberOfAgents; ++agent) {
+				for (int i = 0; i < numberOfAgents; ++i) {
+					int preference = scanner.nextInt();
+					preferenceSystem.preferences[group][agent][i] = preference;
+					if (preference < preferenceSystem.numberOfAgents) {
+						preferenceSystem.ranks[group][agent][preference] = i;
+					}
+				}
+			}
+		}
+		System.out.println(preferenceSystem);
+		System.out.println(preferenceSystem.extenderGroup + " " + preferenceSystem.extenderAgent + " " + preferenceSystem.length);
+		scanner.nextLine();
+		return preferenceSystem;
+	}
+
 	/**
 	 * Main DFS algorithm starting with empty preference system and extending
 	 * searching for either a counterexample system with no stable matching or
@@ -82,21 +81,20 @@ public class App {
 	 * 
 	 * @param NUMBER_OF_GROUPS
 	 * @param NUMBER_OF_AGENTS
+	 * @throws FileNotFoundException
 	 */
-	public static void depthFirstSearch(final int NUMBER_OF_GROUPS, final int NUMBER_OF_AGENTS) {
-		PreferenceSystem preferenceSystem = new PreferenceSystem(NUMBER_OF_GROUPS, NUMBER_OF_AGENTS);
-		StabilityChecker stabilityChecker = new StabilityChecker(NUMBER_OF_GROUPS, NUMBER_OF_AGENTS);
-		
-		long printingInterval = 1*60*1000; //one minute in milliseconds
-		long previousInstant = System.currentTimeMillis();
-		long currentInstant = System.currentTimeMillis();
-		
-		while (preferenceSystem.hasParent() || preferenceSystem.canExtend()) {
-			
-			currentInstant = System.currentTimeMillis();
-			if (currentInstant - previousInstant > printingInterval) {
+	public static void depthFirstSearch(PreferenceSystem preferenceSystem) throws FileNotFoundException {
+		StabilityChecker stabilityChecker = new StabilityChecker(preferenceSystem.numberOfGroups,
+				preferenceSystem.numberOfAgents);
+
+		while (!quit && (preferenceSystem.hasParent() || preferenceSystem.canExtend())) {
+			if (print) {
 				System.out.println(preferenceSystem);
-				previousInstant = currentInstant;
+				print = false;
+			}
+			if (save) {
+				writeSystem(preferenceSystem);
+				save = false;
 			}
 			if (!SymmetryChecker.isLexMin(preferenceSystem) || stabilityChecker.isStable(preferenceSystem)) {
 				if (preferenceSystem.hasParent()) {
@@ -104,7 +102,7 @@ public class App {
 				} else {
 					System.out.println("Error. Stable System has no parent");
 					System.out.println(preferenceSystem);
-					preferenceSystem.nextChoice = NUMBER_OF_AGENTS;
+					preferenceSystem.nextChoice = preferenceSystem.numberOfAgents;
 				}
 			} else if (preferenceSystem.isComplete()) {
 				System.out.println("Counter Example found");
@@ -116,5 +114,45 @@ public class App {
 		}
 
 		System.out.println("Terminated");
+	}
+
+	private static void writeSystem(PreferenceSystem preferenceSystem) throws FileNotFoundException {
+		File output = new File("output.txt");
+		PrintWriter printWriter = new PrintWriter(output);
+		printWriter.println(preferenceSystem.numberOfGroups + " " + preferenceSystem.numberOfAgents);
+		printWriter.println(
+				preferenceSystem.extenderGroup + " " + preferenceSystem.extenderAgent + " " + preferenceSystem.length);
+		for (int group = 0; group < preferenceSystem.numberOfGroups; ++group) {
+			for (int agent = 0; agent < preferenceSystem.numberOfAgents; ++agent) {
+				printWriter.print(preferenceSystem.preferences[group][agent][0]);
+				for (int i = 1; i < preferenceSystem.numberOfAgents; ++i) {
+					printWriter.print(" " + preferenceSystem.preferences[group][agent][i]);
+				}
+				printWriter.println();
+			}
+		}
+
+		printWriter.close();
+	}
+
+	private static void inputHandler(Scanner scanner) {
+		char c = '?';
+		while (!quit) {
+			if (scanner.hasNextLine()) {
+				c = scanner.nextLine().toLowerCase().charAt(0);
+
+				System.out.println(c);
+			}
+			if (c == 'q') {
+				quit = true;
+			}
+			if (c == 's') {
+				save = true;
+			}
+			if (c == 'p') {
+				print = true;
+			}
+			c = '?';
+		}
 	}
 }
