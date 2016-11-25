@@ -38,7 +38,7 @@ public class App {
 				}
 			}
 		};
-		System.out.println("starting thread");
+		System.out.println("starting search thread");
 		thread.start();
 		inputHandler(scanner);
 		scanner.close();

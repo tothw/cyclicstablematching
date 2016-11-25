@@ -188,6 +188,9 @@ public class StabilityChecker {
 			}
 			// check lemma 4.3.12
 			boolean lemma4_3_12_And_4_3_14 = checkLemma4_3_12_And_4_3_14(potentialBlocks, matching, preferenceSystem);
+			if(lemma4_3_12_And_4_3_14) {
+				return true;
+			}
 		} else {
 			// fixing lemma
 		}
