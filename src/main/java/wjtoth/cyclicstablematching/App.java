@@ -16,14 +16,14 @@ public class App {
 	public static boolean save = false;
 	public static boolean print = false;
 
-	public static void main(String[] args) throws InterruptedException, ExecutionException {
+	public static void main(String[] args) throws InterruptedException, ExecutionException, FileNotFoundException {
 		Scanner scanner = new Scanner(System.in);
 
 		System.out.println("Read System (y/n)?");
 		char c = scanner.nextLine().toLowerCase().charAt(0);
 		final PreferenceSystem preferenceSystem;
 		if (c == 'y') {
-			preferenceSystem = readSystem(scanner);
+			preferenceSystem = readSystem();
 		} else {
 			preferenceSystem = new PreferenceSystem(3, 5);
 		}
@@ -45,7 +45,9 @@ public class App {
 
 	}
 
-	private static PreferenceSystem readSystem(Scanner scanner) {
+	private static PreferenceSystem readSystem() throws FileNotFoundException {
+		File file = new File("output.txt");
+		Scanner scanner = new Scanner(file);
 		int numberOfGroups = scanner.nextInt();
 		int numberOfAgents = scanner.nextInt();
 		PreferenceSystem preferenceSystem = new PreferenceSystem(numberOfGroups, numberOfAgents);
@@ -70,7 +72,7 @@ public class App {
 		}
 		System.out.println(preferenceSystem);
 		System.out.println(preferenceSystem.extenderGroup + " " + preferenceSystem.extenderAgent + " " + preferenceSystem.length);
-		scanner.nextLine();
+		scanner.close();
 		return preferenceSystem;
 	}
 

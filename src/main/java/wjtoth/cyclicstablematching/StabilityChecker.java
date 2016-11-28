@@ -330,6 +330,43 @@ public class StabilityChecker {
 	}
 
 	private boolean checkGenderStability(PreferenceSystem preferenceSystem) {
+		for(Matching matching : oneGenderMatchings) {
+			if(matching.size() != preferenceSystem.numberOfAgents) {
+				continue;
+			}
+			for(int i = 0; i<preferenceSystem.numberOfGroups; ++i) {
+				if(checkGenderStability(matching, i, preferenceSystem)) {
+					System.out.println("SUCCESS");
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private boolean checkGenderStability(Matching matching, int group, PreferenceSystem preferenceSystem) {
+		boolean[] firstChoices = new boolean[preferenceSystem.numberOfAgents];
+		int n = preferenceSystem.numberOfGroups;
+		for(int i = 0; i<preferenceSystem.numberOfAgents; ++i) {
+			int partner = matching.getPartner(0, i);
+			int rank = preferenceSystem.ranks[group][i][partner];
+			for(int j = 0; j<rank; ++j) {
+				int preferred = preferenceSystem.preferences[group][i][j];
+				if(preferred == preferenceSystem.numberOfAgents) {
+					continue;
+				}
+				int newFirst = preferenceSystem.preferences[(group+1)%n][preferred][0];
+				if(newFirst == preferenceSystem.numberOfAgents) {
+					//potential for a first choice fixing lemma here?
+					return false;
+				}
+				if(firstChoices[newFirst] == false) {
+					firstChoices[newFirst] = true;
+				} else {
+					return false;
+				}
+			}
+		}
 		return false;
 	}
 }
