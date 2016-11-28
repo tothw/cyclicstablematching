@@ -27,11 +27,19 @@ public class PreferenceSystem {
 
 	int nextChoice;
 
+	int fixedLastGroup;
+	int fixedLastAgent;
+	int fixedLastChoice;
+	
 	public PreferenceSystem(int numberOfGroups, int numberOfAgents) {
 
 		this.numberOfAgents = numberOfAgents;
 		this.numberOfGroups = numberOfGroups;
 
+		fixedLastGroup = numberOfGroups;
+		fixedLastAgent = numberOfAgents;
+		fixedLastChoice = numberOfAgents;
+		
 		preferences = new int[numberOfGroups][numberOfAgents][numberOfAgents];
 		for (int i = 0; i < numberOfGroups; ++i) {
 			for (int j = 0; j < numberOfAgents; ++j) {
@@ -66,6 +74,10 @@ public class PreferenceSystem {
 		ranks[extenderGroup][extenderAgent][nextChoice] = length-1;
 		incrementIndicator();
 
+		fixedLastGroup = numberOfGroups;
+		fixedLastAgent = numberOfAgents;
+		fixedLastChoice = numberOfAgents;
+		
 		return this;
 	}
 	
@@ -92,6 +104,11 @@ public class PreferenceSystem {
 		int prevChoice = preferences[extenderGroup][extenderAgent][length-1];
 		preferences[extenderGroup][extenderAgent][length-1] = numberOfAgents;
 		ranks[extenderGroup][extenderAgent][prevChoice] = numberOfAgents;
+		
+
+		fixedLastGroup = numberOfGroups;
+		fixedLastAgent = numberOfAgents;
+		fixedLastChoice = numberOfAgents;
 		
 		return this;
 	}
