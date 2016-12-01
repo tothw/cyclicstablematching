@@ -141,8 +141,11 @@ public class App {
 		char c = '?';
 		while (!quit) {
 			if (scanner.hasNextLine()) {
+				try {
 				c = scanner.nextLine().toLowerCase().charAt(0);
-
+				} catch(Exception e) {
+					c = '?';
+				}
 				System.out.println(c);
 			}
 			if (c == 'q') {
