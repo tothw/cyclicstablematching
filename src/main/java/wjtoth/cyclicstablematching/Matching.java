@@ -21,6 +21,9 @@ public class Matching implements Comparable<Matching> {
 
 	// number of non-empty matches
 	private int size;
+	
+	// partners indexed by group,index
+	private int[][] partnerOf;
 
 	public Matching(int numberOfGroups, int numberOfAgents) {
 		NUMBER_OF_GROUPS = numberOfGroups;
@@ -52,7 +55,8 @@ public class Matching implements Comparable<Matching> {
 	}
 
 	/**
-	 * Arranges matching tuples in lex order, and Computes hash string
+	 * Arranges matching tuples in lex order, precomputes partners
+	 * and Computes hash string
 	 */
 	private void sortAndHash() {
 		Collections.sort(matching, new Comparator<int[]>() {
@@ -69,6 +73,7 @@ public class Matching implements Comparable<Matching> {
 				return 0;
 			}
 		});
+		precomputePartners();
 		StringBuffer sb = new StringBuffer();
 		for (int[] match : matching) {
 			for (int agent : match) {
@@ -78,6 +83,22 @@ public class Matching implements Comparable<Matching> {
 		hash = sb.toString();
 	}
 
+	//stores partners in memory for quick access
+	private void precomputePartners() {
+		partnerOf = new int[NUMBER_OF_GROUPS][NUMBER_OF_AGENTS];
+		for(int i = 0; i<NUMBER_OF_GROUPS; ++i) {
+			for(int j = 0; j<NUMBER_OF_AGENTS; ++j) {
+				partnerOf[i][j] = -1;
+			}
+		}
+		for(int[] match : matching) {
+			for(int i = 0; i<match.length; ++i) {
+				int partner = match[(i+1)%match.length];
+				partnerOf[i][match[i]] = partner;
+			}
+		}
+	}
+	
 	/**
 	 * sets matching from matching
 	 * 
@@ -100,13 +121,7 @@ public class Matching implements Comparable<Matching> {
 	 * @return
 	 */
 	public int getPartner(int group, int agent) {
-		int partner = -1;
-		for (int[] match : matching) {
-			if (match[group] == agent) {
-				partner = match[(group + 1) % match.length];
-			}
-		}
-		return partner;
+		return partnerOf[group][agent];
 	}
 
 	/**
@@ -227,16 +242,10 @@ public class Matching implements Comparable<Matching> {
 	 * @return true iff agent has a partner in this matching
 	 */
 	public boolean isMatchedInGroup(int group, int agent) {
-		for (int[] match : matching) {
-			if (match[group] == agent) {
-				if (match[(group + 1) % NUMBER_OF_GROUPS] != -1) {
-					return true;
-				} else {
-					return false;
-				}
-			}
+		if(agent >= NUMBER_OF_AGENTS) {
+			return false;
 		}
-		return false;
+		return partnerOf[group][agent] >= 0;
 	}
 
 	public int size() {
