@@ -239,9 +239,9 @@ public class StabilityChecker {
 				preferenceSystem.fixedLastAgent = newLastAgent;
 				preferenceSystem.fixedLastChoice = newLastChoice;
 			} else {
-				if(preferenceSystem.fixedLastGroup != newLastGroup
-						|| preferenceSystem.fixedLastAgent != newLastAgent
-						|| preferenceSystem.fixedLastChoice != newLastChoice) {
+				if(preferenceSystem.fixedLastGroup == newLastGroup
+						&& preferenceSystem.fixedLastAgent == newLastAgent
+						&& preferenceSystem.fixedLastChoice != newLastChoice) {
 					return true;
 				}
 			}
