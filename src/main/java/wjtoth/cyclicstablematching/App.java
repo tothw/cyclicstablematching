@@ -25,7 +25,7 @@ public class App {
 		if (c == 'y') {
 			preferenceSystem = readSystem();
 		} else {
-			preferenceSystem = new PreferenceSystem(3, 5);
+			preferenceSystem = new PreferenceSystem(3, 4);
 		}
 
 		Thread thread = new Thread() {

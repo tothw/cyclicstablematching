@@ -44,8 +44,15 @@ public class StabilityChecker {
 		}
 		System.out.println("Processing: " + permutations.size() + " permutations");
 		Set<Matching> uniqueMatchings = getMatchings(permutations, numberOfAgents, numberOfGroups);
-		Matching[] matchingsArray = new Matching[uniqueMatchings.size()];
-		uniqueMatchings.toArray(matchingsArray);
+		Set<Matching> cleanedMatchings = new TreeSet<>();
+		for(Matching matching: uniqueMatchings) {
+			if(matching.getPartner(0, 0) == 0
+				||  (matching.getPartner(0, 0) == 1 && matching.getPartner(1, 0) == 0)){
+				cleanedMatchings.add(matching);
+			}
+		}
+		Matching[] matchingsArray = new Matching[cleanedMatchings.size()];
+		cleanedMatchings.toArray(matchingsArray);
 		// length means number of tuples in matching
 		System.out.println("Done Processing Permutations");
 		return matchingsArray;
@@ -107,10 +114,11 @@ public class StabilityChecker {
 		if (checkInductive) {
 			return true;
 		}
+		/**
 		boolean checkGenderStability = checkGenderStability(preferenceSystem);
 		if (checkGenderStability) {
 			return true;
-		}
+		}**/
 		return false;
 	}
 
@@ -128,6 +136,14 @@ public class StabilityChecker {
 
 		Matching subMatching = matching.validSubmatching(preferenceSystem);
 		if (subMatching.size() > 0) {
+			//validate subMatching
+			if(!(subMatching.getPartner(0, 0) == 0 
+					|| subMatching.getPartner(0, 0)==1 && subMatching.getPartner(1, 0)==0
+					|| (subMatching.getPartner(0, 0) == -1 && subMatching.getPartner(1, 0) == -1
+						&& subMatching.getPartner(1, 1) == -1 && subMatching.getPartner(2, 0) == -1)
+					|| (subMatching.getPartner(0,0) == -1 && subMatching.getPartner(1,0) == -1 && subMatching.size() >= 2))) {
+				return false;
+			}
 			// compute internal blocking triples
 			boolean isInternallyBlocked = subMatching.isInternallyBlocked(preferenceSystem);
 			if (isInternallyBlocked) {
@@ -140,13 +156,16 @@ public class StabilityChecker {
 			if (lemma4_3_7) {
 				return true;
 			}
+			/**
 			// check lemma 4.3.12
 			boolean lemma4_3_12_And_4_3_13 = checkLemma4_3_12_And_4_3_13(potentialBlocks, subMatching,
 					preferenceSystem);
 			if (lemma4_3_12_And_4_3_13) {
 				return true;
 			}
+			**/
 		}
+		/**
 		if (subMatching.size() >= preferenceSystem.numberOfAgents - 2
 				&& subMatching.size() < preferenceSystem.numberOfAgents) {
 			// fixing lemma 4.3.14
@@ -155,7 +174,7 @@ public class StabilityChecker {
 				return true;
 			}
 		}
-
+		 **/
 		return false;
 	}
 
