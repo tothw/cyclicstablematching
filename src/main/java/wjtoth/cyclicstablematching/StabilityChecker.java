@@ -38,7 +38,7 @@ public class StabilityChecker {
 		matchings = buildMatchings(numberOfAgents, numberOfGroups);
 		oneGenderMatchings = buildMatchings(numberOfAgents, 2);
 		
-		poolSize = Runtime.getRuntime().availableProcessors();
+		poolSize = Runtime.getRuntime().availableProcessors()/2;
 		pool = Executors.newFixedThreadPool(poolSize);
 		futures = new ArrayList<Future<Boolean>>();
 		
@@ -172,7 +172,9 @@ public class StabilityChecker {
 					|| (subMatching.getPartner(0, 0) == -1 && subMatching.getPartner(1, 0) == -1
 							&& subMatching.size() >= 2)
 					|| (subMatching.getPartner(0, 0) == -1 && subMatching.getPartner(1, 0) == 0
-							&& subMatching.getPartner(1, 1) == -1))) {
+							&& subMatching.getPartner(1, 1) == -1)
+					|| (subMatching.getPartner(0, 0) == -1 && subMatching.getPartner(1, 0) == -1)
+					)) {
 				return false;
 			}
 			// compute internal blocking triples
