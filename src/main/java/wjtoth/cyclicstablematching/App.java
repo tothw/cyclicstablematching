@@ -35,6 +35,12 @@ public class App {
 					depthFirstSearch(preferenceSystem);
 				} catch (FileNotFoundException e) {
 					e.printStackTrace();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (ExecutionException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 			}
 		};
@@ -84,8 +90,10 @@ public class App {
 	 * @param NUMBER_OF_GROUPS
 	 * @param NUMBER_OF_AGENTS
 	 * @throws FileNotFoundException
+	 * @throws ExecutionException 
+	 * @throws InterruptedException 
 	 */
-	public static void depthFirstSearch(PreferenceSystem preferenceSystem) throws FileNotFoundException {
+	public static void depthFirstSearch(PreferenceSystem preferenceSystem) throws FileNotFoundException, InterruptedException, ExecutionException {
 		StabilityChecker stabilityChecker = new StabilityChecker(preferenceSystem.numberOfGroups,
 				preferenceSystem.numberOfAgents);
 

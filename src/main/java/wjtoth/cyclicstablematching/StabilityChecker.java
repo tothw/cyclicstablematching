@@ -1,9 +1,15 @@
 package wjtoth.cyclicstablematching;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class StabilityChecker {
 
@@ -14,6 +20,10 @@ public class StabilityChecker {
 	// used in some sufficient checks
 	private Matching[] oneGenderMatchings;
 
+	
+	private int poolSize;
+	private ExecutorService pool;
+	private List<Future<Boolean>> futures;
 	/**
 	 * Standard constructor
 	 * 
@@ -27,6 +37,12 @@ public class StabilityChecker {
 		}
 		matchings = buildMatchings(numberOfAgents, numberOfGroups);
 		oneGenderMatchings = buildMatchings(numberOfAgents, 2);
+		
+		poolSize = Runtime.getRuntime().availableProcessors();
+		pool = Executors.newFixedThreadPool(poolSize);
+		futures = new ArrayList<Future<Boolean>>();
+		
+		System.out.println("Using pool of size: " + poolSize);
 	}
 
 	/**
@@ -102,25 +118,44 @@ public class StabilityChecker {
 		return retval;
 	}
 
-	public boolean isStable(PreferenceSystem preferenceSystem) {
+	public boolean isStable(PreferenceSystem preferenceSystem) throws InterruptedException, ExecutionException {
 		boolean checkInductive = checkInductive(preferenceSystem);
 		if (checkInductive) {
 			return true;
 		}
 		/**
-		boolean checkGenderStability = checkGenderStability(preferenceSystem);
-		if (checkGenderStability) {
-			return true;
-		}**/
+		 * boolean checkGenderStability =
+		 * checkGenderStability(preferenceSystem); if (checkGenderStability) {
+		 * return true; }
+		 **/
 		return false;
 	}
 
-	private boolean checkInductive(PreferenceSystem preferenceSystem) {
+	private boolean checkInductive(final PreferenceSystem preferenceSystem) throws InterruptedException, ExecutionException {
 		for (Matching matching : matchings) {
 			boolean stableFlag = checkInductive(matching, preferenceSystem);
 			if (stableFlag) {
 				return true;
 			}
+		}
+		int matchingIndex = 0;
+		
+		while (matchingIndex < matchings.length) {
+			for (int i = 0; i < poolSize; ++i) {
+				final Matching matching = matchings[matchingIndex];
+				futures.add(pool.submit(new Callable<Boolean>() {
+					public Boolean call() throws Exception {
+						return checkInductive(matching, preferenceSystem);
+					}
+				}));
+				++matchingIndex;
+			}
+			for(Future<Boolean> future : futures) {
+				if(future.get()) {
+					return true;
+				}
+			}
+			futures.clear();
 		}
 		return false;
 	}
@@ -129,15 +164,15 @@ public class StabilityChecker {
 
 		Matching subMatching = matching.validSubmatching(preferenceSystem);
 		if (subMatching.size() > 0) {
-			//validate subMatching
-			if(!(subMatching.getPartner(0, 0) == 0 
-					|| subMatching.getPartner(0, 0)==1 && subMatching.getPartner(1, 0)==0
+			// validate subMatching
+			if (!(subMatching.getPartner(0, 0) == 0
+					|| subMatching.getPartner(0, 0) == 1 && subMatching.getPartner(1, 0) == 0
 					|| (subMatching.getPartner(0, 0) == -1 && subMatching.getPartner(1, 0) == -1
-						&& subMatching.getPartner(1, 1) == -1 && subMatching.getPartner(2, 0) == -1)
-					|| (subMatching.getPartner(0,0) == -1 && subMatching.getPartner(1,0) == -1 && subMatching.size() >= 2)
-					|| (subMatching.getPartner(0,0) == -1 && subMatching.getPartner(1, 0) == 0 
-						&& subMatching.getPartner(1,1) == -1)
-					)) {
+							&& subMatching.getPartner(1, 1) == -1 && subMatching.getPartner(2, 0) == -1)
+					|| (subMatching.getPartner(0, 0) == -1 && subMatching.getPartner(1, 0) == -1
+							&& subMatching.size() >= 2)
+					|| (subMatching.getPartner(0, 0) == -1 && subMatching.getPartner(1, 0) == 0
+							&& subMatching.getPartner(1, 1) == -1))) {
 				return false;
 			}
 			// compute internal blocking triples
@@ -153,23 +188,16 @@ public class StabilityChecker {
 				return true;
 			}
 			/**
-			// check lemma 4.3.12
-			boolean lemma4_3_12_And_4_3_13 = checkLemma4_3_12_And_4_3_13(potentialBlocks, subMatching,
-					preferenceSystem);
-			if (lemma4_3_12_And_4_3_13) {
-				return true;
-			}
-			**/
+			 * // check lemma 4.3.12 boolean lemma4_3_12_And_4_3_13 =
+			 * checkLemma4_3_12_And_4_3_13(potentialBlocks, subMatching,
+			 * preferenceSystem); if (lemma4_3_12_And_4_3_13) { return true; }
+			 **/
 		}
 		/**
-		if (subMatching.size() >= preferenceSystem.numberOfAgents - 2
-				&& subMatching.size() < preferenceSystem.numberOfAgents) {
-			// fixing lemma 4.3.14
-			boolean lemma4_3_14 = checkLemma4_3_14(subMatching, preferenceSystem);
-			if (lemma4_3_14) {
-				return true;
-			}
-		}
+		 * if (subMatching.size() >= preferenceSystem.numberOfAgents - 2 &&
+		 * subMatching.size() < preferenceSystem.numberOfAgents) { // fixing
+		 * lemma 4.3.14 boolean lemma4_3_14 = checkLemma4_3_14(subMatching,
+		 * preferenceSystem); if (lemma4_3_14) { return true; } }
 		 **/
 		return false;
 	}
@@ -232,30 +260,29 @@ public class StabilityChecker {
 	}
 
 	private boolean attemptFix(Matching subMatching, PreferenceSystem preferenceSystem, int group, int[] triple) {
-		//valid no internal blocks
-		if(!subMatching.isInternallyBlocked(preferenceSystem,group,triple)){
-			List<List<Integer>>potentialBlocks = subMatching.firstOrderDissatisfied(preferenceSystem, group, triple);
+		// valid no internal blocks
+		if (!subMatching.isInternallyBlocked(preferenceSystem, group, triple)) {
+			List<List<Integer>> potentialBlocks = subMatching.firstOrderDissatisfied(preferenceSystem, group, triple);
 			for (int i = 0; i < preferenceSystem.numberOfGroups; ++i) {
 				List<Integer> groupBlocks = potentialBlocks.get(i);
 				for (int v : groupBlocks) {
-					if (!subMatching.isMatchedInGroup(i, v,triple)) {
+					if (!subMatching.isMatchedInGroup(i, v, triple)) {
 						return false;
 					}
 				}
 			}
-			//perform fixing
+			// perform fixing
 			int newLastGroup = group;
 			int newLastAgent = triple[group];
-			int newLastChoice = triple[(group+1)%triple.length];
-			if(preferenceSystem.fixedLastGroup == preferenceSystem.numberOfGroups
+			int newLastChoice = triple[(group + 1) % triple.length];
+			if (preferenceSystem.fixedLastGroup == preferenceSystem.numberOfGroups
 					&& preferenceSystem.fixedLastAgent == preferenceSystem.numberOfAgents
 					&& preferenceSystem.fixedLastChoice == preferenceSystem.numberOfAgents) {
 				preferenceSystem.fixedLastGroup = newLastGroup;
 				preferenceSystem.fixedLastAgent = newLastAgent;
 				preferenceSystem.fixedLastChoice = newLastChoice;
 			} else {
-				if(preferenceSystem.fixedLastGroup == newLastGroup
-						&& preferenceSystem.fixedLastAgent == newLastAgent
+				if (preferenceSystem.fixedLastGroup == newLastGroup && preferenceSystem.fixedLastAgent == newLastAgent
 						&& preferenceSystem.fixedLastChoice != newLastChoice) {
 					return true;
 				}
@@ -345,12 +372,12 @@ public class StabilityChecker {
 	}
 
 	private boolean checkGenderStability(PreferenceSystem preferenceSystem) {
-		for(Matching matching : oneGenderMatchings) {
-			if(matching.size() != preferenceSystem.numberOfAgents) {
+		for (Matching matching : oneGenderMatchings) {
+			if (matching.size() != preferenceSystem.numberOfAgents) {
 				continue;
 			}
-			for(int i = 0; i<preferenceSystem.numberOfGroups; ++i) {
-				if(checkGenderStability(matching, i, preferenceSystem)) {
+			for (int i = 0; i < preferenceSystem.numberOfGroups; ++i) {
+				if (checkGenderStability(matching, i, preferenceSystem)) {
 					System.out.println("SUCCESS");
 					return true;
 				}
@@ -362,20 +389,20 @@ public class StabilityChecker {
 	private boolean checkGenderStability(Matching matching, int group, PreferenceSystem preferenceSystem) {
 		boolean[] firstChoices = new boolean[preferenceSystem.numberOfAgents];
 		int n = preferenceSystem.numberOfGroups;
-		for(int i = 0; i<preferenceSystem.numberOfAgents; ++i) {
+		for (int i = 0; i < preferenceSystem.numberOfAgents; ++i) {
 			int partner = matching.getPartner(0, i);
 			int rank = preferenceSystem.ranks[group][i][partner];
-			for(int j = 0; j<rank; ++j) {
+			for (int j = 0; j < rank; ++j) {
 				int preferred = preferenceSystem.preferences[group][i][j];
-				if(preferred == preferenceSystem.numberOfAgents) {
+				if (preferred == preferenceSystem.numberOfAgents) {
 					continue;
 				}
-				int newFirst = preferenceSystem.preferences[(group+1)%n][preferred][0];
-				if(newFirst == preferenceSystem.numberOfAgents) {
-					//potential for a first choice fixing lemma here?
+				int newFirst = preferenceSystem.preferences[(group + 1) % n][preferred][0];
+				if (newFirst == preferenceSystem.numberOfAgents) {
+					// potential for a first choice fixing lemma here?
 					return false;
 				}
-				if(firstChoices[newFirst] == false) {
+				if (firstChoices[newFirst] == false) {
 					firstChoices[newFirst] = true;
 				} else {
 					return false;
