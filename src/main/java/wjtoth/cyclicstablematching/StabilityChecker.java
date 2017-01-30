@@ -44,15 +44,8 @@ public class StabilityChecker {
 		}
 		System.out.println("Processing: " + permutations.size() + " permutations");
 		Set<Matching> uniqueMatchings = getMatchings(permutations, numberOfAgents, numberOfGroups);
-		Set<Matching> cleanedMatchings = new TreeSet<>();
-		for(Matching matching: uniqueMatchings) {
-			if(matching.getPartner(0, 0) == 0
-				||  (matching.getPartner(0, 0) == 1 && matching.getPartner(1, 0) == 0)){
-				cleanedMatchings.add(matching);
-			}
-		}
-		Matching[] matchingsArray = new Matching[cleanedMatchings.size()];
-		cleanedMatchings.toArray(matchingsArray);
+		Matching[] matchingsArray = new Matching[uniqueMatchings.size()];
+		uniqueMatchings.toArray(matchingsArray);
 		// length means number of tuples in matching
 		System.out.println("Done Processing Permutations");
 		return matchingsArray;
@@ -141,7 +134,10 @@ public class StabilityChecker {
 					|| subMatching.getPartner(0, 0)==1 && subMatching.getPartner(1, 0)==0
 					|| (subMatching.getPartner(0, 0) == -1 && subMatching.getPartner(1, 0) == -1
 						&& subMatching.getPartner(1, 1) == -1 && subMatching.getPartner(2, 0) == -1)
-					|| (subMatching.getPartner(0,0) == -1 && subMatching.getPartner(1,0) == -1 && subMatching.size() >= 2))) {
+					|| (subMatching.getPartner(0,0) == -1 && subMatching.getPartner(1,0) == -1 && subMatching.size() >= 2)
+					|| (subMatching.getPartner(0,0) == -1 && subMatching.getPartner(1, 0) == 0 
+						&& subMatching.getPartner(1,1) == -1)
+					)) {
 				return false;
 			}
 			// compute internal blocking triples
