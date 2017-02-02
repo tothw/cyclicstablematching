@@ -63,6 +63,13 @@ public class SymmetryChecker {
 			}
 		}
 		
+		//lemma n4 condition: can move m0 to end of every d list
+		for(int i = 0; i<preferenceSystem.numberOfAgents; ++i) {
+			if(preferenceSystem.ranks[2][i][0] < preferenceSystem.numberOfAgents-1 ) {
+				return false;
+			}
+		}
+		
 		return true;
 	}
 	

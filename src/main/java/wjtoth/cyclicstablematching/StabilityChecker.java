@@ -45,7 +45,7 @@ public class StabilityChecker {
 		System.out.println("Using pool of size: " + poolSize);
 	}
 
-	/**
+	/**p
 	 * Builds all matchings with numberOfGroups genders and numberOfAgents
 	 * agents in each gender
 	 * 
