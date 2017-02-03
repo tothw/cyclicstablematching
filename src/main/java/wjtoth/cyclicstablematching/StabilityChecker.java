@@ -115,9 +115,52 @@ public class StabilityChecker {
 	}
 
 	private boolean checkInductive(PreferenceSystem preferenceSystem) {
+		if (check4SameCase(preferenceSystem)) {
+			return true;
+		}
 		for (Matching matching : matchings) {
 			boolean stableFlag = checkInductive(matching, preferenceSystem);
 			if (stableFlag) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean check4SameCase(PreferenceSystem preferenceSystem) {
+		for (int group = 0; group < preferenceSystem.numberOfGroups; ++group) {
+			int firstChoice = preferenceSystem.numberOfAgents;
+			int firstCount = 0;
+			int secondChoice = preferenceSystem.numberOfAgents;
+			int secondCount = 0;
+			for (int i = 0; i < preferenceSystem.numberOfAgents; ++i) {
+				int choice = preferenceSystem.preferences[group][i][0];
+				if (firstChoice == preferenceSystem.numberOfAgents) {
+					firstChoice = choice;
+					if(choice != preferenceSystem.numberOfAgents){
+						++firstCount;
+					}
+				} else {
+					if (choice == firstChoice) {
+						++firstCount;
+					} else {
+						if (secondChoice == preferenceSystem.numberOfAgents) {
+							secondChoice = choice;
+							if(choice != preferenceSystem.numberOfAgents){
+								++secondCount;
+							}
+						} else {
+							if (choice == secondChoice) {
+								++secondCount;
+							} else {
+								return false;
+							}
+						}
+					}
+				}
+
+			}
+			if((firstCount == preferenceSystem.numberOfAgents-1 && secondCount == 1) || (firstCount == 1 && secondCount == preferenceSystem.numberOfAgents-1)){
 				return true;
 			}
 		}
@@ -217,30 +260,29 @@ public class StabilityChecker {
 	}
 
 	private boolean attemptFix(Matching subMatching, PreferenceSystem preferenceSystem, int group, int[] triple) {
-		//valid no internal blocks
-		if(!subMatching.isInternallyBlocked(preferenceSystem,group,triple)){
-			List<List<Integer>>potentialBlocks = subMatching.firstOrderDissatisfied(preferenceSystem, group, triple);
+		// valid no internal blocks
+		if (!subMatching.isInternallyBlocked(preferenceSystem, group, triple)) {
+			List<List<Integer>> potentialBlocks = subMatching.firstOrderDissatisfied(preferenceSystem, group, triple);
 			for (int i = 0; i < preferenceSystem.numberOfGroups; ++i) {
 				List<Integer> groupBlocks = potentialBlocks.get(i);
 				for (int v : groupBlocks) {
-					if (!subMatching.isMatchedInGroup(i, v,triple)) {
+					if (!subMatching.isMatchedInGroup(i, v, triple)) {
 						return false;
 					}
 				}
 			}
-			//perform fixing
+			// perform fixing
 			int newLastGroup = group;
 			int newLastAgent = triple[group];
-			int newLastChoice = triple[(group+1)%triple.length];
-			if(preferenceSystem.fixedLastGroup == preferenceSystem.numberOfGroups
+			int newLastChoice = triple[(group + 1) % triple.length];
+			if (preferenceSystem.fixedLastGroup == preferenceSystem.numberOfGroups
 					&& preferenceSystem.fixedLastAgent == preferenceSystem.numberOfAgents
 					&& preferenceSystem.fixedLastChoice == preferenceSystem.numberOfAgents) {
 				preferenceSystem.fixedLastGroup = newLastGroup;
 				preferenceSystem.fixedLastAgent = newLastAgent;
 				preferenceSystem.fixedLastChoice = newLastChoice;
 			} else {
-				if(preferenceSystem.fixedLastGroup == newLastGroup
-						&& preferenceSystem.fixedLastAgent == newLastAgent
+				if (preferenceSystem.fixedLastGroup == newLastGroup && preferenceSystem.fixedLastAgent == newLastAgent
 						&& preferenceSystem.fixedLastChoice != newLastChoice) {
 					return true;
 				}
@@ -318,11 +360,20 @@ public class StabilityChecker {
 
 	private boolean checkLemma4_3_7(List<List<Integer>> potentialBlocks, Matching matching,
 			PreferenceSystem preferenceSystem) {
+		int desiredGroup = preferenceSystem.numberOfGroups;
+		int desiredAgent = preferenceSystem.numberOfAgents;
 		for (int group = 0; group < preferenceSystem.numberOfGroups; ++group) {
 			List<Integer> groupBlocks = potentialBlocks.get(group);
 			for (int v : groupBlocks) {
 				if (!matching.isMatchedInGroup(group, v)) {
-					return false;
+					if (desiredGroup == preferenceSystem.numberOfGroups
+							&& desiredAgent == preferenceSystem.numberOfAgents) {
+						desiredGroup = group;
+						desiredAgent = v;
+					}
+					if (desiredGroup != group || desiredAgent != v) {
+						return false;
+					}
 				}
 			}
 		}
@@ -330,12 +381,12 @@ public class StabilityChecker {
 	}
 
 	private boolean checkGenderStability(PreferenceSystem preferenceSystem) {
-		for(Matching matching : oneGenderMatchings) {
-			if(matching.size() != preferenceSystem.numberOfAgents) {
+		for (Matching matching : oneGenderMatchings) {
+			if (matching.size() != preferenceSystem.numberOfAgents) {
 				continue;
 			}
-			for(int i = 0; i<preferenceSystem.numberOfGroups; ++i) {
-				if(checkGenderStability(matching, i, preferenceSystem)) {
+			for (int i = 0; i < preferenceSystem.numberOfGroups; ++i) {
+				if (checkGenderStability(matching, i, preferenceSystem)) {
 					System.out.println("SUCCESS");
 					return true;
 				}
@@ -347,20 +398,20 @@ public class StabilityChecker {
 	private boolean checkGenderStability(Matching matching, int group, PreferenceSystem preferenceSystem) {
 		boolean[] firstChoices = new boolean[preferenceSystem.numberOfAgents];
 		int n = preferenceSystem.numberOfGroups;
-		for(int i = 0; i<preferenceSystem.numberOfAgents; ++i) {
+		for (int i = 0; i < preferenceSystem.numberOfAgents; ++i) {
 			int partner = matching.getPartner(0, i);
 			int rank = preferenceSystem.ranks[group][i][partner];
-			for(int j = 0; j<rank; ++j) {
+			for (int j = 0; j < rank; ++j) {
 				int preferred = preferenceSystem.preferences[group][i][j];
-				if(preferred == preferenceSystem.numberOfAgents) {
+				if (preferred == preferenceSystem.numberOfAgents) {
 					continue;
 				}
-				int newFirst = preferenceSystem.preferences[(group+1)%n][preferred][0];
-				if(newFirst == preferenceSystem.numberOfAgents) {
-					//potential for a first choice fixing lemma here?
+				int newFirst = preferenceSystem.preferences[(group + 1) % n][preferred][0];
+				if (newFirst == preferenceSystem.numberOfAgents) {
+					// potential for a first choice fixing lemma here?
 					return false;
 				}
-				if(firstChoices[newFirst] == false) {
+				if (firstChoices[newFirst] == false) {
 					firstChoices[newFirst] = true;
 				} else {
 					return false;
