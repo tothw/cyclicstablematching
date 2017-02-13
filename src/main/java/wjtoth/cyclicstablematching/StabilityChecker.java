@@ -1,6 +1,7 @@
 package wjtoth.cyclicstablematching;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -103,6 +104,100 @@ public class StabilityChecker {
 	}
 
 	public boolean isStable(PreferenceSystem preferenceSystem) {
+		if (quickChecks(preferenceSystem)) {
+			return true;
+		}
+		if (preferenceSystem.length >= 3 && slowChecks(preferenceSystem)) {
+			return true;
+		}
+		return false;
+	}
+
+	private boolean quickChecks(PreferenceSystem preferenceSystem) {
+		int agent = (preferenceSystem.extenderAgent - 1 + preferenceSystem.numberOfAgents)
+				% preferenceSystem.numberOfAgents;
+		int group = agent == preferenceSystem.numberOfAgents - 1
+				? (preferenceSystem.extenderGroup - 1 + preferenceSystem.numberOfGroups)
+						% preferenceSystem.numberOfGroups
+				: preferenceSystem.extenderGroup;
+		int choice = (agent == preferenceSystem.numberOfAgents - 1 && group == preferenceSystem.numberOfGroups - 1)
+				? preferenceSystem.length - 1 : preferenceSystem.length;
+
+		if (cycleCheck(group, agent, choice, preferenceSystem)) {
+			return true;
+		}
+
+		if (initialChoicesCheck(preferenceSystem)) {
+			return true;
+		}
+		return false;
+	}
+
+	private boolean initialChoicesCheck(PreferenceSystem preferenceSystem) {
+		// only check when one gender is fully specified
+		// don't check first system (null system)
+		// only check first choices right now
+		if (preferenceSystem.extenderAgent != 0
+				|| (preferenceSystem.extenderGroup == 0 && preferenceSystem.length == 1)
+				|| (preferenceSystem.length > 1 && preferenceSystem.extenderGroup != 0)
+				|| preferenceSystem.length > 2) {
+			return false;
+		}
+		int group = (preferenceSystem.extenderGroup - 1 + preferenceSystem.numberOfGroups) % preferenceSystem.numberOfGroups;
+		//count number of times an agent is first choice;
+		int[] choiceFrequency = new int[preferenceSystem.numberOfAgents];
+		for(int i = 0; i<preferenceSystem.numberOfAgents; ++i) {
+			int choice = preferenceSystem.preferences[group][i][0];
+			if( choice < preferenceSystem.numberOfAgents) {
+				choiceFrequency[choice] += 1;
+			}
+		}
+		Arrays.sort(choiceFrequency);
+		int mostFrequent = choiceFrequency[preferenceSystem.numberOfAgents-1];
+		//all same
+		if(mostFrequent == preferenceSystem.numberOfAgents) {
+			return true;
+		} else {
+			int secondMostFrequent = choiceFrequency[preferenceSystem.numberOfAgents-2];
+			//n-1 same, one different, needs lemma n4
+			if(mostFrequent == preferenceSystem.numberOfAgents-1 && secondMostFrequent == 1) {
+				return true;
+			}
+		}
+		//last check for all different, false if it fails
+		for(int i = 0; i<preferenceSystem.numberOfAgents; ++i) {
+			if(choiceFrequency[i] != 1) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private boolean cycleCheck(int group, int agent, int choice, PreferenceSystem preferenceSystem) {
+		// only checks 112 and 111 triples
+		if (choice > 2 || choice == 0) {
+			return false;
+		}
+		int next = preferenceSystem.preferences[group][agent][choice - 1];
+		if (next == preferenceSystem.numberOfAgents) {
+			return false;
+		}
+		int nextGroup = (group + 1) % preferenceSystem.numberOfGroups;
+		for (int i = 0; i < preferenceSystem.numberOfGroups - 2; ++i) {
+			next = preferenceSystem.preferences[nextGroup][next][0];
+			nextGroup = (nextGroup + 1) % preferenceSystem.numberOfGroups;
+			if (next == preferenceSystem.numberOfAgents) {
+				return false;
+			}
+		}
+		if (preferenceSystem.preferences[nextGroup][next][0] == agent) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	private boolean slowChecks(PreferenceSystem preferenceSystem) {
 		boolean checkInductive = checkInductive(preferenceSystem);
 		if (checkInductive) {
 			return true;
@@ -137,7 +232,7 @@ public class StabilityChecker {
 				int choice = preferenceSystem.preferences[group][i][0];
 				if (firstChoice == preferenceSystem.numberOfAgents) {
 					firstChoice = choice;
-					if(choice != preferenceSystem.numberOfAgents){
+					if (choice != preferenceSystem.numberOfAgents) {
 						++firstCount;
 					}
 				} else {
@@ -146,7 +241,7 @@ public class StabilityChecker {
 					} else {
 						if (secondChoice == preferenceSystem.numberOfAgents) {
 							secondChoice = choice;
-							if(choice != preferenceSystem.numberOfAgents){
+							if (choice != preferenceSystem.numberOfAgents) {
 								++secondCount;
 							}
 						} else {
@@ -160,7 +255,8 @@ public class StabilityChecker {
 				}
 
 			}
-			if((firstCount == preferenceSystem.numberOfAgents-1 && secondCount == 1) || (firstCount == 1 && secondCount == preferenceSystem.numberOfAgents-1)){
+			if ((firstCount == preferenceSystem.numberOfAgents - 1 && secondCount == 1)
+					|| (firstCount == 1 && secondCount == preferenceSystem.numberOfAgents - 1)) {
 				return true;
 			}
 		}

@@ -89,6 +89,7 @@ public class App {
 		StabilityChecker stabilityChecker = new StabilityChecker(preferenceSystem.numberOfGroups,
 				preferenceSystem.numberOfAgents);
 
+		
 		while (!quit && (preferenceSystem.hasParent() || preferenceSystem.canExtend())) {
 			if (print) {
 				System.out.println(preferenceSystem);
