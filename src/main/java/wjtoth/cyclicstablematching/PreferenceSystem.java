@@ -8,21 +8,21 @@ package wjtoth.cyclicstablematching;
  */
 public class PreferenceSystem {
 
-	int[][][] preferences;
-	int[][][] ranks;
+	public int[][][] preferences;
+	public int[][][] ranks;
 
-	int numberOfGroups;
-	int numberOfAgents;
+	public int numberOfGroups;
+	public int numberOfAgents;
 
-	int extenderGroup;
-	int extenderAgent;
-	int length;
+	public int extenderGroup;
+	public int extenderAgent;
+	public int length;
 
 	int nextChoice;
 
-	int fixedLastGroup;
-	int fixedLastAgent;
-	int fixedLastChoice;
+	public int fixedLastGroup;
+	public int fixedLastAgent;
+	public int fixedLastChoice;
 	
 	public PreferenceSystem(int numberOfGroups, int numberOfAgents) {
 

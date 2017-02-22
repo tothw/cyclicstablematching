@@ -1,6 +1,9 @@
 package wjtoth.cyclicstablematching;
 
 import java.util.concurrent.ExecutionException;
+
+import wjtoth.cyclicstablematching.checks.Check;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -15,6 +18,7 @@ public class App {
 	public static boolean quit = false;
 	public static boolean save = false;
 	public static boolean print = false;
+	public static boolean statistics = false;
 
 	public static void main(String[] args) throws InterruptedException, ExecutionException, FileNotFoundException {
 		Scanner scanner = new Scanner(System.in);
@@ -99,6 +103,10 @@ public class App {
 				writeSystem(preferenceSystem);
 				save = false;
 			}
+			if (statistics) {
+				printStatistics(stabilityChecker);
+				statistics = false;
+			}
 			if (!SymmetryChecker.isLexMin(preferenceSystem) || stabilityChecker.isStable(preferenceSystem)) {
 				if (preferenceSystem.hasParent()) {
 					preferenceSystem = preferenceSystem.parent();
@@ -117,6 +125,18 @@ public class App {
 		}
 
 		System.out.println("Terminated");
+	}
+
+	private static void printStatistics(StabilityChecker stabilityChecker) {
+		System.out.println("Successes:");
+		for(Check check : stabilityChecker.quickChecks) {
+			System.out.print(check.toString() + ": ");
+			System.out.println(check.successes);
+		}
+		for(Check check : stabilityChecker.longChecks) {
+			System.out.print(check.toString() + ": ");
+			System.out.println(check.successes);
+		}
 	}
 
 	private static void writeSystem(PreferenceSystem preferenceSystem) throws FileNotFoundException {
@@ -157,6 +177,9 @@ public class App {
 			}
 			if (c == 'p') {
 				print = true;
+			}
+			if(c == 'a') {
+				statistics = true;
 			}
 			c = '?';
 		}

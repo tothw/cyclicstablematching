@@ -1,10 +1,16 @@
 package wjtoth.cyclicstablematching;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+
+import wjtoth.cyclicstablematching.checks.Check;
+import wjtoth.cyclicstablematching.checks.CheckAlmostInductive;
+import wjtoth.cyclicstablematching.checks.CheckCycle;
+import wjtoth.cyclicstablematching.checks.CheckGenderStability;
+import wjtoth.cyclicstablematching.checks.CheckInductive;
+import wjtoth.cyclicstablematching.checks.CheckInitialChoices;
 
 public class StabilityChecker {
 
@@ -14,6 +20,9 @@ public class StabilityChecker {
 	// matchings of one gender to anther;
 	// used in some sufficient checks
 	private Matching[] oneGenderMatchings;
+
+	Check[] quickChecks;
+	Check[] longChecks;
 
 	/**
 	 * Standard constructor
@@ -28,6 +37,10 @@ public class StabilityChecker {
 		}
 		matchings = buildMatchings(numberOfAgents, numberOfGroups);
 		oneGenderMatchings = buildMatchings(numberOfAgents, 2);
+
+		quickChecks = new Check[] { new CheckInitialChoices(), new CheckCycle() };
+		longChecks = new Check[] { new CheckInductive(matchings), new CheckGenderStability(oneGenderMatchings),
+				new CheckAlmostInductive(matchings) };
 	}
 
 	/**
@@ -114,406 +127,21 @@ public class StabilityChecker {
 	}
 
 	private boolean quickChecks(PreferenceSystem preferenceSystem) {
-		int agent = (preferenceSystem.extenderAgent - 1 + preferenceSystem.numberOfAgents)
-				% preferenceSystem.numberOfAgents;
-		int group = agent == preferenceSystem.numberOfAgents - 1
-				? (preferenceSystem.extenderGroup - 1 + preferenceSystem.numberOfGroups)
-						% preferenceSystem.numberOfGroups
-				: preferenceSystem.extenderGroup;
-		int choice = (agent == preferenceSystem.numberOfAgents - 1 && group == preferenceSystem.numberOfGroups - 1)
-				? preferenceSystem.length - 1 : preferenceSystem.length;
-
-		if (cycleCheck(group, agent, choice, preferenceSystem)) {
-			return true;
-		}
-
-		if (initialChoicesCheck(preferenceSystem)) {
-			return true;
-		}
-		return false;
-	}
-
-	private boolean initialChoicesCheck(PreferenceSystem preferenceSystem) {
-		// only check when one gender is fully specified
-		// don't check first system (null system)
-		// only check first choices right now
-		if (preferenceSystem.extenderAgent != 0
-				|| (preferenceSystem.extenderGroup == 0 && preferenceSystem.length == 1)
-				|| (preferenceSystem.length > 1 && preferenceSystem.extenderGroup != 0)
-				|| preferenceSystem.length > 2) {
-			return false;
-		}
-		int group = (preferenceSystem.extenderGroup - 1 + preferenceSystem.numberOfGroups) % preferenceSystem.numberOfGroups;
-		//count number of times an agent is first choice;
-		int[] choiceFrequency = new int[preferenceSystem.numberOfAgents];
-		for(int i = 0; i<preferenceSystem.numberOfAgents; ++i) {
-			int choice = preferenceSystem.preferences[group][i][0];
-			if( choice < preferenceSystem.numberOfAgents) {
-				choiceFrequency[choice] += 1;
-			}
-		}
-		Arrays.sort(choiceFrequency);
-		int mostFrequent = choiceFrequency[preferenceSystem.numberOfAgents-1];
-		//all same
-		if(mostFrequent == preferenceSystem.numberOfAgents) {
-			return true;
-		} else {
-			int secondMostFrequent = choiceFrequency[preferenceSystem.numberOfAgents-2];
-			//n-1 same, one different, needs lemma n4
-			if(mostFrequent == preferenceSystem.numberOfAgents-1 && secondMostFrequent == 1) {
+		for (Check check : quickChecks) {
+			if (check.check(preferenceSystem)) {
 				return true;
 			}
 		}
-		//last check for all different, false if it fails
-		for(int i = 0; i<preferenceSystem.numberOfAgents; ++i) {
-			if(choiceFrequency[i] != 1) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	private boolean cycleCheck(int group, int agent, int choice, PreferenceSystem preferenceSystem) {
-		// only checks 112 and 111 triples
-		if (choice > 2 || choice == 0) {
-			return false;
-		}
-		int next = preferenceSystem.preferences[group][agent][choice - 1];
-		if (next == preferenceSystem.numberOfAgents) {
-			return false;
-		}
-		int nextGroup = (group + 1) % preferenceSystem.numberOfGroups;
-		for (int i = 0; i < preferenceSystem.numberOfGroups - 2; ++i) {
-			next = preferenceSystem.preferences[nextGroup][next][0];
-			nextGroup = (nextGroup + 1) % preferenceSystem.numberOfGroups;
-			if (next == preferenceSystem.numberOfAgents) {
-				return false;
-			}
-		}
-		if (preferenceSystem.preferences[nextGroup][next][0] == agent) {
-			return true;
-		} else {
-			return false;
-		}
+		return false;
 	}
 
 	private boolean slowChecks(PreferenceSystem preferenceSystem) {
-		boolean checkInductive = checkInductive(preferenceSystem);
-		if (checkInductive) {
-			return true;
-		}
-		boolean checkGenderStability = checkGenderStability(preferenceSystem);
-		if (checkGenderStability) {
-			return true;
-		}
-		return false;
-	}
-
-	private boolean checkInductive(PreferenceSystem preferenceSystem) {
-		if (check4SameCase(preferenceSystem)) {
-			return true;
-		}
-		for (Matching matching : matchings) {
-			boolean stableFlag = checkInductive(matching, preferenceSystem);
-			if (stableFlag) {
+		for (Check check : longChecks) {
+			if (check.check(preferenceSystem)) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	private boolean check4SameCase(PreferenceSystem preferenceSystem) {
-		for (int group = 0; group < preferenceSystem.numberOfGroups; ++group) {
-			int firstChoice = preferenceSystem.numberOfAgents;
-			int firstCount = 0;
-			int secondChoice = preferenceSystem.numberOfAgents;
-			int secondCount = 0;
-			for (int i = 0; i < preferenceSystem.numberOfAgents; ++i) {
-				int choice = preferenceSystem.preferences[group][i][0];
-				if (firstChoice == preferenceSystem.numberOfAgents) {
-					firstChoice = choice;
-					if (choice != preferenceSystem.numberOfAgents) {
-						++firstCount;
-					}
-				} else {
-					if (choice == firstChoice) {
-						++firstCount;
-					} else {
-						if (secondChoice == preferenceSystem.numberOfAgents) {
-							secondChoice = choice;
-							if (choice != preferenceSystem.numberOfAgents) {
-								++secondCount;
-							}
-						} else {
-							if (choice == secondChoice) {
-								++secondCount;
-							} else {
-								return false;
-							}
-						}
-					}
-				}
-
-			}
-			if ((firstCount == preferenceSystem.numberOfAgents - 1 && secondCount == 1)
-					|| (firstCount == 1 && secondCount == preferenceSystem.numberOfAgents - 1)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private boolean checkInductive(Matching matching, PreferenceSystem preferenceSystem) {
-
-		Matching subMatching = matching.validSubmatching(preferenceSystem);
-		if (subMatching.size() > 0) {
-			// compute internal blocking triples
-			boolean isInternallyBlocked = subMatching.isInternallyBlocked(preferenceSystem);
-			if (isInternallyBlocked) {
-				return false;
-			}
-			// compute potential blocks against matching
-			List<List<Integer>> potentialBlocks = subMatching.firstOrderDissatisfied(preferenceSystem);
-			// check lemma 4.3.7
-			boolean lemma4_3_7 = checkLemma4_3_7(potentialBlocks, subMatching, preferenceSystem);
-			if (lemma4_3_7) {
-				return true;
-			}
-			// check lemma 4.3.12
-			boolean lemma4_3_12_And_4_3_13 = checkLemma4_3_12_And_4_3_13(potentialBlocks, subMatching,
-					preferenceSystem);
-			if (lemma4_3_12_And_4_3_13) {
-				return true;
-			}
-		}
-		if (subMatching.size() >= preferenceSystem.numberOfAgents - 2
-				&& subMatching.size() < preferenceSystem.numberOfAgents) {
-			// fixing lemma 4.3.14
-			boolean lemma4_3_14 = checkLemma4_3_14(subMatching, preferenceSystem);
-			if (lemma4_3_14) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	// only works for 3 groups atm
-	private boolean checkLemma4_3_14(Matching subMatching, PreferenceSystem preferenceSystem) {
-		for (int group = 0; group < preferenceSystem.numberOfGroups; ++group) {
-			if (checkLemma4_3_14(subMatching, preferenceSystem, group)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private boolean checkLemma4_3_14(Matching subMatching, PreferenceSystem preferenceSystem, int group) {
-		for (int exceptionAgent = 0; exceptionAgent < preferenceSystem.numberOfAgents; ++exceptionAgent) {
-			if (subMatching.isMatchedInGroup(group, exceptionAgent)) {
-				continue;
-			}
-			if (checkLemma4_3_14(subMatching, preferenceSystem, group, exceptionAgent)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private boolean checkLemma4_3_14(Matching subMatching, PreferenceSystem preferenceSystem, int group,
-			int exceptionAgent) {
-		int n = preferenceSystem.numberOfGroups;
-		for (int exceptionPartner = 0; exceptionPartner < preferenceSystem.numberOfAgents; ++exceptionPartner) {
-			if (subMatching.isMatchedInGroup((group + 1) % n, exceptionPartner)
-					|| preferenceSystem.ranks[group][exceptionAgent][exceptionPartner] < preferenceSystem.numberOfAgents) {
-				continue;
-			}
-			if (checkLemma4_3_14(subMatching, preferenceSystem, group, exceptionAgent, exceptionPartner)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private boolean checkLemma4_3_14(Matching subMatching, PreferenceSystem preferenceSystem, int group,
-			int exceptionAgent, int exceptionPartner) {
-		int n = preferenceSystem.numberOfGroups;
-		for (int c = 0; c < preferenceSystem.numberOfAgents; ++c) {
-			if (subMatching.isMatchedInGroup((group + 2) % n, c)
-					|| preferenceSystem.ranks[(group + 1) % n][exceptionPartner][c] == preferenceSystem.numberOfAgents
-					|| preferenceSystem.ranks[(group + 2) % n][c][exceptionAgent] == preferenceSystem.numberOfAgents) {
-				continue;
-			}
-			int[] triple = new int[n];
-			triple[group] = exceptionAgent;
-			triple[(group + 1) % n] = exceptionPartner;
-			triple[(group + 2) % n] = c;
-			if (attemptFix(subMatching, preferenceSystem, group, triple)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private boolean attemptFix(Matching subMatching, PreferenceSystem preferenceSystem, int group, int[] triple) {
-		// valid no internal blocks
-		if (!subMatching.isInternallyBlocked(preferenceSystem, group, triple)) {
-			List<List<Integer>> potentialBlocks = subMatching.firstOrderDissatisfied(preferenceSystem, group, triple);
-			for (int i = 0; i < preferenceSystem.numberOfGroups; ++i) {
-				List<Integer> groupBlocks = potentialBlocks.get(i);
-				for (int v : groupBlocks) {
-					if (!subMatching.isMatchedInGroup(i, v, triple)) {
-						return false;
-					}
-				}
-			}
-			// perform fixing
-			int newLastGroup = group;
-			int newLastAgent = triple[group];
-			int newLastChoice = triple[(group + 1) % triple.length];
-			if (preferenceSystem.fixedLastGroup == preferenceSystem.numberOfGroups
-					&& preferenceSystem.fixedLastAgent == preferenceSystem.numberOfAgents
-					&& preferenceSystem.fixedLastChoice == preferenceSystem.numberOfAgents) {
-				preferenceSystem.fixedLastGroup = newLastGroup;
-				preferenceSystem.fixedLastAgent = newLastAgent;
-				preferenceSystem.fixedLastChoice = newLastChoice;
-			} else {
-				if (preferenceSystem.fixedLastGroup == newLastGroup && preferenceSystem.fixedLastAgent == newLastAgent
-						&& preferenceSystem.fixedLastChoice != newLastChoice) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	private boolean checkLemma4_3_12_And_4_3_13(List<List<Integer>> potentialBlocks, Matching matching,
-			PreferenceSystem preferenceSystem) {
-		int[] idol = new int[preferenceSystem.numberOfGroups];
-		for (int i = 0; i < idol.length; ++i) {
-			idol[i] = preferenceSystem.numberOfAgents;
-		}
-		for (int group = 0; group < preferenceSystem.numberOfGroups; ++group) {
-			List<Integer> groupBlocks = potentialBlocks.get(group);
-			for (int u : groupBlocks) {
-				if (!matching.isMatchedInGroup(group, u)) {
-					if (idol[group] != preferenceSystem.numberOfAgents) {
-						return false;
-					} else {
-						idol[group] = u;
-					}
-				}
-			}
-		}
-		boolean[] isFirstChoiceVerified = new boolean[preferenceSystem.numberOfGroups];
-		for (int i = 0; i < isFirstChoiceVerified.length; ++i) {
-			if (idol[i] != preferenceSystem.numberOfAgents) {
-				isFirstChoiceVerified[i] = verifyFirstChoice(idol[i], i, matching, preferenceSystem);
-			}
-		}
-		// check lemma 4_3_12
-		for (int group = 0; group < preferenceSystem.numberOfGroups; ++group) {
-			if (isFirstChoiceVerified[group]) {
-				boolean noOtherIdols = true;
-				for (int i = 0; i != group; i = (i + 1) % 3) {
-					if (idol[i] != preferenceSystem.numberOfAgents) {
-						noOtherIdols = false;
-						break;
-					}
-				}
-				if (noOtherIdols) {
-					return true;
-				}
-			}
-		}
-		// check lemma 4_3_13
-		if (matching.size() >= preferenceSystem.numberOfGroups - 2) {
-			for (int group = 0; group < preferenceSystem.numberOfGroups; ++group) {
-				if (isFirstChoiceVerified[group] && isFirstChoiceVerified[(group + 1) % 3]) {
-					if (idol[(group + 2) % 3] == preferenceSystem.numberOfAgents) {
-						return true;
-					}
-				}
-			}
-		}
-		return false;
-	}
-
-	private boolean verifyFirstChoice(int idol, int group, Matching matching, PreferenceSystem preferenceSystem) {
-		for (int agent = 0; agent < preferenceSystem.numberOfAgents; ++agent) {
-			if (!matching.isMatchedInGroup(group, agent)) {
-				int rank = preferenceSystem.ranks[group][agent][idol];
-				for (int i = 0; i < rank; ++i) {
-					int preferred = preferenceSystem.preferences[group][agent][i];
-					if (!matching.isMatchedInGroup((group + 1) % 3, preferred)) {
-						return false;
-					}
-				}
-			}
-		}
-		return true;
-	}
-
-	private boolean checkLemma4_3_7(List<List<Integer>> potentialBlocks, Matching matching,
-			PreferenceSystem preferenceSystem) {
-		int desiredGroup = preferenceSystem.numberOfGroups;
-		int desiredAgent = preferenceSystem.numberOfAgents;
-		for (int group = 0; group < preferenceSystem.numberOfGroups; ++group) {
-			List<Integer> groupBlocks = potentialBlocks.get(group);
-			for (int v : groupBlocks) {
-				if (!matching.isMatchedInGroup(group, v)) {
-					if (desiredGroup == preferenceSystem.numberOfGroups
-							&& desiredAgent == preferenceSystem.numberOfAgents) {
-						desiredGroup = group;
-						desiredAgent = v;
-					}
-					if (desiredGroup != group || desiredAgent != v) {
-						return false;
-					}
-				}
-			}
-		}
-		return true;
-	}
-
-	private boolean checkGenderStability(PreferenceSystem preferenceSystem) {
-		for (Matching matching : oneGenderMatchings) {
-			if (matching.size() != preferenceSystem.numberOfAgents) {
-				continue;
-			}
-			for (int i = 0; i < preferenceSystem.numberOfGroups; ++i) {
-				if (checkGenderStability(matching, i, preferenceSystem)) {
-					System.out.println("SUCCESS");
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	private boolean checkGenderStability(Matching matching, int group, PreferenceSystem preferenceSystem) {
-		boolean[] firstChoices = new boolean[preferenceSystem.numberOfAgents];
-		int n = preferenceSystem.numberOfGroups;
-		for (int i = 0; i < preferenceSystem.numberOfAgents; ++i) {
-			int partner = matching.getPartner(0, i);
-			int rank = preferenceSystem.ranks[group][i][partner];
-			for (int j = 0; j < rank; ++j) {
-				int preferred = preferenceSystem.preferences[group][i][j];
-				if (preferred == preferenceSystem.numberOfAgents) {
-					continue;
-				}
-				int newFirst = preferenceSystem.preferences[(group + 1) % n][preferred][0];
-				if (newFirst == preferenceSystem.numberOfAgents) {
-					// potential for a first choice fixing lemma here?
-					return false;
-				}
-				if (firstChoices[newFirst] == false) {
-					firstChoices[newFirst] = true;
-				} else {
-					return false;
-				}
-			}
-		}
-		return false;
-	}
 }
