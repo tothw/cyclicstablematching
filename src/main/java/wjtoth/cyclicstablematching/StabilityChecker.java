@@ -8,6 +8,7 @@ import java.util.TreeSet;
 import wjtoth.cyclicstablematching.checks.Check;
 import wjtoth.cyclicstablematching.checks.CheckAlmostInductive;
 import wjtoth.cyclicstablematching.checks.CheckCycle;
+import wjtoth.cyclicstablematching.checks.CheckFixing;
 import wjtoth.cyclicstablematching.checks.CheckGenderStability;
 import wjtoth.cyclicstablematching.checks.CheckInductive;
 import wjtoth.cyclicstablematching.checks.CheckInitialChoices;
@@ -40,7 +41,7 @@ public class StabilityChecker {
 
 		quickChecks = new Check[] { new CheckInitialChoices(), new CheckCycle() };
 		longChecks = new Check[] { new CheckInductive(matchings), new CheckGenderStability(oneGenderMatchings),
-				new CheckAlmostInductive(matchings) };
+				new CheckAlmostInductive(matchings), new CheckFixing(matchings) };
 	}
 
 	/**
