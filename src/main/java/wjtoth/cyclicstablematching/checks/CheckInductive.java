@@ -23,24 +23,33 @@ public class CheckInductive extends Check {
 	@Override
 	public boolean checkImpl(PreferenceSystem preferenceSystem) {
 		for (Matching matching : matchings) {
-			MatchingPS mathcingPS = new MatchingPS(matching, preferenceSystem);
-			if (mathcingPS.size() == 0) {
-				continue;
-			}
-			// compute internal blocking triples
-			boolean isInternallyBlocked = mathcingPS.isInternallyBlocked();
-			if (isInternallyBlocked) {
-				return false;
-			}
-			// compute potential blocks against matching
-			List<List<Integer>> potentialBlocks = mathcingPS.firstOrderDissatisfied();
-			if (checkImpl(potentialBlocks, mathcingPS, preferenceSystem)) {
+			if(checkImpl(matching, preferenceSystem)) {
+				//System.out.println("Stable Matching:");
+				//System.out.println(matching);
 				return true;
 			}
 		}
 		return false;
 	}
 
+	public boolean checkImpl(Matching matching, PreferenceSystem preferenceSystem) {
+		MatchingPS mathcingPS = new MatchingPS(matching, preferenceSystem);
+		if (mathcingPS.size() == 0) {
+			return false;
+		}
+		// compute internal blocking triples
+		boolean isInternallyBlocked = mathcingPS.isInternallyBlocked();
+		if (isInternallyBlocked) {
+			return false;
+		}
+		// compute potential blocks against matching
+		List<List<Integer>> potentialBlocks = mathcingPS.firstOrderDissatisfied();
+		if (checkImpl(potentialBlocks, mathcingPS, preferenceSystem)) {
+			return true;
+		}
+		return false;
+	}
+	
 	private boolean checkImpl(List<List<Integer>> potentialBlocks, MatchingPS mathcingPS,
 			PreferenceSystem preferenceSystem) {
 		int desiredGroup = preferenceSystem.numberOfGroups;

@@ -32,6 +32,14 @@ public class App {
 			preferenceSystem = new PreferenceSystem(3, 5);
 		}
 
+		System.out.println("Verify System (y/n)?");
+		c = scanner.nextLine().toLowerCase().charAt(0);
+		if (c == 'y') {
+			verifySystem(preferenceSystem);
+			scanner.close();
+			return;
+		} 
+		
 		Thread thread = new Thread() {
 			@Override
 			public void run() {
@@ -47,6 +55,13 @@ public class App {
 		inputHandler(scanner);
 		scanner.close();
 
+	}
+
+	private static void verifySystem(PreferenceSystem preferenceSystem) {
+		StabilityChecker stabilityChecker = new StabilityChecker(preferenceSystem.numberOfGroups,
+				preferenceSystem.numberOfAgents);
+		
+		stabilityChecker.verify(preferenceSystem);		
 	}
 
 	private static PreferenceSystem readSystem() throws FileNotFoundException {

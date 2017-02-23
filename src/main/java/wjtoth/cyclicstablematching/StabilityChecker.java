@@ -121,7 +121,7 @@ public class StabilityChecker {
 		if (quickChecks(preferenceSystem)) {
 			return true;
 		}
-		if (preferenceSystem.length >= 3 && slowChecks(preferenceSystem)) {
+		if (preferenceSystem.length >= 0 && slowChecks(preferenceSystem)) {
 			return true;
 		}
 		return false;
@@ -143,6 +143,58 @@ public class StabilityChecker {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * verifies a complete preference system on 3 genders
+	 * 
+	 * @param preferenceSystem
+	 */
+	public void verify(PreferenceSystem preferenceSystem) {
+		boolean stableMatchingFound = false;
+		Matching stableMatching = null;
+		for (Matching matching : matchings) {
+			boolean isBlocked = false;
+			for (int a = 0; a < preferenceSystem.numberOfAgents && !isBlocked; ++a) {
+				int partnerOfA = matching.getPartner(0, a);
+				int rankOfPartnerOfA = preferenceSystem.ranks[0][a][partnerOfA];
+				for (int i = 0; i < rankOfPartnerOfA && !isBlocked; ++i) {
+					int b = preferenceSystem.preferences[0][a][i];
+					int partnerOfB = matching.getPartner(1, b);
+					int rankOfPartnerOfB = preferenceSystem.ranks[1][b][partnerOfB];
+					for (int j = 0; j < rankOfPartnerOfB && !isBlocked; ++j) {
+						int c = preferenceSystem.preferences[2][b][j];
+						int partnerOfC = matching.getPartner(2, c);
+						if (preferenceSystem.prefers(2, c, a, partnerOfC)) {
+							isBlocked = true;
+						}
+					}
+				}
+			}
+			if (!isBlocked) {
+				System.out.println("Stable Matching found:");
+				System.out.println(matching);
+				stableMatching = matching;
+				System.out.println("For System: ");
+				System.out.println(preferenceSystem);
+				stableMatchingFound = true;
+				break;
+			}
+		}
+		if (!stableMatchingFound) {
+			System.out.println("NO Stable Matching found");
+			System.out.println("For System: ");
+			System.out.println(preferenceSystem);
+		}
+		System.out.println("Testing Inductive");
+
+		CheckInductive check = new CheckInductive(matchings);
+		System.out.println(check.check(preferenceSystem));
+		
+		System.out.println("Particular Inductive Test");
+		System.out.println(stableMatching);
+		System.out.println(check.checkImpl(stableMatching, preferenceSystem));
+
 	}
 
 }

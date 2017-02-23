@@ -20,15 +20,15 @@ public class MatchingPS {
 			return preferenceSystem.numberOfAgents;
 		}
 		int partner = matching.getPartner(group, agent);
-		int rank = preferenceSystem.ranks[group][agent][partner];
-		return rank < preferenceSystem.numberOfAgents ? partner : rank;
+		return preferenceSystem.isAcceptable(group, agent, partner) ? partner : preferenceSystem.numberOfAgents;
 	}
 	
 	public boolean isMatchedInGroup(int group, int agent) {
 		int a = agent;
-		for(int g = 0; g<preferenceSystem.numberOfGroups; ++g) {
-			int partner = getPartner((group+g) % preferenceSystem.numberOfGroups, a);
-			if(partner == preferenceSystem.numberOfAgents) {
+		for(int i = 0; i<preferenceSystem.numberOfGroups; ++i) {
+			int g = (group+i) % preferenceSystem.numberOfGroups;
+			int partner = getPartner(g, a);
+			if(!preferenceSystem.isAcceptable(g, a, partner)) {
 				return false;
 			}
 			a = partner;
@@ -61,6 +61,7 @@ public class MatchingPS {
 							if (isMatchedInGroup(2, c)) {
 								int partnerOfC = getPartner(2, c);
 								if (preferenceSystem.prefers(2, c, a, partnerOfC)) {
+									//System.out.println("Blocking: (" + a + "," + b + "," + c + ")");
 									return true;
 								}
 							}
