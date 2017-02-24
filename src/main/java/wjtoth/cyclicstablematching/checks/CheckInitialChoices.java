@@ -5,7 +5,11 @@ import java.util.Arrays;
 import wjtoth.cyclicstablematching.PreferenceSystem;
 
 public class CheckInitialChoices extends Check{
-
+	
+	public CheckInitialChoices(boolean track) {
+		super(track);
+	}
+	
 	@Override
 	public boolean checkImpl(PreferenceSystem preferenceSystem) {
 		// only check when one gender is fully specified

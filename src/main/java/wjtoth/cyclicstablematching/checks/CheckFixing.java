@@ -15,14 +15,17 @@ public class CheckFixing extends Check {
 	 * 
 	 * @param matchings
 	 */
-	public CheckFixing(Matching[] matchings) {
-		super();
+	public CheckFixing(Matching[] matchings, boolean track) {
+		super(track);
 		this.matchings = matchings;
 	}
 
 	@Override
 	public boolean checkImpl(PreferenceSystem preferenceSystem) {
 		for (Matching matching : matchings) {
+			if(matching.getPartner(preferenceSystem.lastExtensionGroup(), preferenceSystem.lastExtensionAgent()) != preferenceSystem.lastExtensionChoice()) {
+				continue;
+			}
 			MatchingPS matchingPS = new MatchingPS(matching, preferenceSystem);
 			if (matchingPS.size() >= preferenceSystem.numberOfAgents - 2
 					&& matchingPS.size() < preferenceSystem.numberOfAgents) {

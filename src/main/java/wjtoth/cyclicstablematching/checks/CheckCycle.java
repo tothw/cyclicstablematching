@@ -4,16 +4,16 @@ import wjtoth.cyclicstablematching.PreferenceSystem;
 
 public class CheckCycle extends Check{
 
+	public CheckCycle(boolean track) {
+		super(track);
+	}
+
+
 	@Override
 	public boolean checkImpl(PreferenceSystem preferenceSystem) {
-		int agent = (preferenceSystem.extenderAgent - 1 + preferenceSystem.numberOfAgents)
-				% preferenceSystem.numberOfAgents;
-		int group = agent == preferenceSystem.numberOfAgents - 1
-				? (preferenceSystem.extenderGroup - 1 + preferenceSystem.numberOfGroups)
-						% preferenceSystem.numberOfGroups
-				: preferenceSystem.extenderGroup;
-		int choice = (agent == preferenceSystem.numberOfAgents - 1 && group == preferenceSystem.numberOfGroups - 1)
-				? preferenceSystem.length - 1 : preferenceSystem.length;
+		int agent = preferenceSystem.lastExtensionAgent();
+		int group = preferenceSystem.lastExtensionGroup();
+		int choice = preferenceSystem.lastExtensionChoice();
 		
 		return checkImpl(group,agent,choice,preferenceSystem);
 	}

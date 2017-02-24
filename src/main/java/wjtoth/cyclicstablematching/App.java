@@ -28,23 +28,32 @@ public class App {
 		final PreferenceSystem preferenceSystem;
 		if (c == 'y') {
 			preferenceSystem = readSystem();
+			System.out.println("Verify System (y/n)?");
+			c = scanner.nextLine().toLowerCase().charAt(0);
+			if (c == 'y') {
+				verifySystem(preferenceSystem);
+				scanner.close();
+				return;
+			} 
 		} else {
 			preferenceSystem = new PreferenceSystem(3, 5);
 		}
 
-		System.out.println("Verify System (y/n)?");
+		System.out.println("Track Check Performance (y/n)?");
+		final boolean track;
 		c = scanner.nextLine().toLowerCase().charAt(0);
 		if (c == 'y') {
-			verifySystem(preferenceSystem);
-			scanner.close();
-			return;
-		} 
+			track = true;
+		} else {
+			track = false;
+		}
+		
 		
 		Thread thread = new Thread() {
 			@Override
 			public void run() {
 				try {
-					depthFirstSearch(preferenceSystem);
+					depthFirstSearch(preferenceSystem, track);
 				} catch (FileNotFoundException e) {
 					e.printStackTrace();
 				}
@@ -59,7 +68,7 @@ public class App {
 
 	private static void verifySystem(PreferenceSystem preferenceSystem) {
 		StabilityChecker stabilityChecker = new StabilityChecker(preferenceSystem.numberOfGroups,
-				preferenceSystem.numberOfAgents);
+				preferenceSystem.numberOfAgents, false);
 		
 		stabilityChecker.verify(preferenceSystem);		
 	}
@@ -104,9 +113,9 @@ public class App {
 	 * @param NUMBER_OF_AGENTS
 	 * @throws FileNotFoundException
 	 */
-	public static void depthFirstSearch(PreferenceSystem preferenceSystem) throws FileNotFoundException {
+	public static void depthFirstSearch(PreferenceSystem preferenceSystem, boolean track) throws FileNotFoundException {
 		StabilityChecker stabilityChecker = new StabilityChecker(preferenceSystem.numberOfGroups,
-				preferenceSystem.numberOfAgents);
+				preferenceSystem.numberOfAgents, track);
 
 		
 		while (!quit && (preferenceSystem.hasParent() || preferenceSystem.canExtend())) {

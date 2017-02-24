@@ -15,17 +15,20 @@ public class CheckInductive extends Check {
 
 	Matching[] matchings;
 
-	public CheckInductive(Matching[] matchings) {
-		super();
+	public CheckInductive(Matching[] matchings, boolean track) {
+		super(track);
 		this.matchings = matchings;
 	}
 
 	@Override
 	public boolean checkImpl(PreferenceSystem preferenceSystem) {
 		for (Matching matching : matchings) {
+			if(matching.getPartner(preferenceSystem.lastExtensionGroup(), preferenceSystem.lastExtensionAgent()) != preferenceSystem.lastExtensionChoice()) {
+				continue;
+			}
 			if(checkImpl(matching, preferenceSystem)) {
 				//System.out.println("Stable Matching:");
-				//System.out.println(matching);
+				//pSystem.out.println(matching);
 				return true;
 			}
 		}

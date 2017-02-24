@@ -31,7 +31,7 @@ public class StabilityChecker {
 	 * @param numberOfAgents
 	 * @param numberOfGroups
 	 */
-	public StabilityChecker(int numberOfGroups, int numberOfAgents) {
+	public StabilityChecker(int numberOfGroups, int numberOfAgents, boolean track) {
 		ArrayList<Integer> agents = new ArrayList<Integer>();
 		for (int i = 0; i < numberOfAgents; ++i) {
 			agents.add(i);
@@ -39,9 +39,9 @@ public class StabilityChecker {
 		matchings = buildMatchings(numberOfAgents, numberOfGroups);
 		oneGenderMatchings = buildMatchings(numberOfAgents, 2);
 
-		quickChecks = new Check[] { new CheckInitialChoices(), new CheckCycle() };
-		longChecks = new Check[] { new CheckInductive(matchings), new CheckGenderStability(oneGenderMatchings),
-				new CheckAlmostInductive(matchings), new CheckFixing(matchings) };
+		quickChecks = new Check[] { new CheckInitialChoices(track), new CheckCycle(track) };
+		longChecks = new Check[] { new CheckInductive(matchings, track), new CheckGenderStability(oneGenderMatchings, track),
+				new CheckAlmostInductive(matchings, track), new CheckFixing(matchings, track) };
 	}
 
 	/**
@@ -188,7 +188,7 @@ public class StabilityChecker {
 		}
 		System.out.println("Testing Inductive");
 
-		CheckInductive check = new CheckInductive(matchings);
+		CheckInductive check = new CheckInductive(matchings, false);
 		System.out.println(check.check(preferenceSystem));
 		
 		System.out.println("Particular Inductive Test");

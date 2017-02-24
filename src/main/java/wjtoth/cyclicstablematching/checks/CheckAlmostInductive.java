@@ -14,8 +14,8 @@ public class CheckAlmostInductive extends Check{
 	 * Checks Lemma 4.3.12 and 4.3.13
 	 * @param matchings
 	 */
-	public CheckAlmostInductive(Matching[] matchings) {
-		super();
+	public CheckAlmostInductive(Matching[] matchings, boolean track) {
+		super(track);
 		this.matchings = matchings;
 	}
 	
@@ -23,6 +23,9 @@ public class CheckAlmostInductive extends Check{
 	@Override
 	public boolean checkImpl(PreferenceSystem preferenceSystem) {
 		for (Matching matching : matchings) {
+			if(matching.getPartner(preferenceSystem.lastExtensionGroup(), preferenceSystem.lastExtensionAgent()) != preferenceSystem.lastExtensionChoice()) {
+				continue;
+			}
 			MatchingPS mathcingPS = new MatchingPS(matching, preferenceSystem);
 			if (mathcingPS.size() == 0) {
 				continue;

@@ -10,11 +10,11 @@ public class CheckGenderStability extends Check {
 
 	Matching[] oneGenderMatchings;
 
-	public CheckGenderStability(Matching[] oneGenderMatchings) {
-		super();
+	public CheckGenderStability(Matching[] oneGenderMatchings, boolean track) {
+		super(track);
 		this.oneGenderMatchings = oneGenderMatchings;
 	}
-	
+
 	@Override
 	public boolean checkImpl(PreferenceSystem preferenceSystem) {
 		for (int i = 0; i < preferenceSystem.numberOfGroups; ++i) {
@@ -25,13 +25,18 @@ public class CheckGenderStability extends Check {
 		return false;
 	}
 
-
 	private boolean checkImpl(int group, PreferenceSystem preferenceSystem) {
 		for (Matching matching : oneGenderMatchings) {
 			if (matching.size() != preferenceSystem.numberOfAgents) {
 				continue;
 			}
-
+			if (group == preferenceSystem.lastExtensionGroup() && matching.getPartner(0,
+					preferenceSystem.lastExtensionAgent()) != preferenceSystem.lastExtensionChoice()) {
+				continue;
+			}
+			if(group == (preferenceSystem.lastExtensionGroup() + 1)%preferenceSystem.numberOfGroups) {
+				continue;
+			}
 			if (checkImpl(matching, group, preferenceSystem)) {
 				return true;
 			}
@@ -66,9 +71,9 @@ public class CheckGenderStability extends Check {
 		}
 		return true;
 	}
-	
+
 	public String toString() {
 		return "Gender Stability Check";
 	}
-	
+
 }
