@@ -147,7 +147,10 @@ public class App {
 				preferenceSystem = preferenceSystem.next();
 			}
 		}
-
+		System.out.println("Case 1 used: " + stabilityChecker.case1);
+		System.out.println("Case 2 used: " + stabilityChecker.case2);
+		System.out.println("Case 3 used: " + stabilityChecker.case3);
+		System.out.println("Case 4 used: " + stabilityChecker.case4);
 		System.out.println("Terminated");
 	}
 

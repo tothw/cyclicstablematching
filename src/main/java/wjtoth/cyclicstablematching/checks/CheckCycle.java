@@ -20,8 +20,8 @@ public class CheckCycle extends Check{
 	
 
 	private boolean checkImpl(int group, int agent, int choice, PreferenceSystem preferenceSystem) {
-		// only checks 112 and 111 triples
-		if (choice > 2 || choice == 0) {
+		// only checks  111 triples
+		if (choice > 1 || choice == 0) {
 			return false;
 		}
 		int next = preferenceSystem.preferences[group][agent][choice - 1];

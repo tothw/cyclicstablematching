@@ -28,6 +28,8 @@ public class StabilityChecker {
 
 	Check[] quickChecks;
 	Check[] longChecks;
+	
+	public boolean case1,case2,case3,case4;
 
 	/**
 	 * Standard constructor
@@ -48,6 +50,11 @@ public class StabilityChecker {
 		longChecks = new Check[] { new CheckInductive(matchings, track),
 				new CheckGenderStability(oneGenderMatchings, track), new CheckAlmostInductive(matchings, track),
 				new CheckFixing(matchings, track) };
+		
+		case1 = false;
+		case2 = false;
+		case3 = false;
+		case4 = false;
 	}
 
 	private void sortMatchingsByType() {
@@ -168,6 +175,10 @@ public class StabilityChecker {
 	}
 
 	public boolean isStable(PreferenceSystem preferenceSystem) {
+		if(quickChecks[1].check(preferenceSystem)) {
+			//quickChecks[1] checks for 111 triples
+			return true;
+		}
 		if(preferenceSystem.isComplete()) {
 			return completeCheck(preferenceSystem);
 		}
@@ -179,6 +190,7 @@ public class StabilityChecker {
 		CheckInductive check = (CheckInductive)longChecks[0]; //inductive check
 		for(Matching matching : matchingsByType.get(2)) {
 			if(check.checkImpl(matching, preferenceSystem)) {
+				case3 = true;
 				return true;
 			}
 		}
@@ -187,6 +199,7 @@ public class StabilityChecker {
 				continue;
 			}
 			if(check.checkImpl(matching, preferenceSystem)) {
+				case4 = true;
 				return true;
 			}
 		}
@@ -197,11 +210,13 @@ public class StabilityChecker {
 		}
 		for(Matching matching : matchingsByType.get(1)) {
 			if(check.checkImpl(matching, preferenceSystem)) {
+				case2 = true;
 				return true;
 			}
 		}
 		for(Matching matching : matchingsByType.get(0)) {
 			if(check.checkImpl(matching, preferenceSystem)) {
+				case1 = true;
 				return true;
 			}
 		}
