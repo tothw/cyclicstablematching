@@ -1,6 +1,7 @@
 package wjtoth.cyclicstablematching;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -17,6 +18,9 @@ public class StabilityChecker {
 
 	// matching to use in search of stable matching
 	private Matching[] matchings;
+
+	// matchings by type: the four cases
+	List<List<Matching>> matchingsByType;
 
 	// matchings of one gender to anther;
 	// used in some sufficient checks
@@ -37,11 +41,57 @@ public class StabilityChecker {
 			agents.add(i);
 		}
 		matchings = buildMatchings(numberOfAgents, numberOfGroups);
+		sortMatchingsByType();
 		oneGenderMatchings = buildMatchings(numberOfAgents, 2);
 
 		quickChecks = new Check[] { new CheckInitialChoices(track), new CheckCycle(track) };
-		longChecks = new Check[] { new CheckInductive(matchings, track), new CheckGenderStability(oneGenderMatchings, track),
-				new CheckAlmostInductive(matchings, track), new CheckFixing(matchings, track) };
+		longChecks = new Check[] { new CheckInductive(matchings, track),
+				new CheckGenderStability(oneGenderMatchings, track), new CheckAlmostInductive(matchings, track),
+				new CheckFixing(matchings, track) };
+	}
+
+	private void sortMatchingsByType() {
+		matchingsByType = new ArrayList<List<Matching>>();
+		for (int i = 0; i < 4; ++i) {
+			matchingsByType.add(new LinkedList<Matching>());
+		}
+		for (Matching matching : matchings) {
+			sortByType(matching);
+		}
+
+	}
+
+	private void sortByType(Matching matching) {
+		int partnerOfM0 = matching.getPartner(0, 0);
+		if (partnerOfM0 == 0) {
+			// can be case 1, 3, or 4
+			int partnerOfW0 = matching.getPartner(1, 0);
+			if (partnerOfW0 == 0) {
+				// is case 1
+				matchingsByType.get(0).add(matching);
+			}
+			if (partnerOfW0 == 1) {
+				// can be case 3 or 4
+				int partnerOfD0 = matching.getPartner(2, 0);
+				if (partnerOfD0 == 1) {
+					// is case 3
+					matchingsByType.get(2).add(matching);
+				}
+				if (partnerOfD0 == 2) {
+					// can be case 4 provided m1 gets their first choice
+					matchingsByType.get(3).add(matching);
+				}
+			}
+		}
+		if (partnerOfM0 == 1) {
+			// can be case 2
+			int partnerOfW1 = matching.getPartner(1, 1);
+			if (partnerOfW1 == 0) {
+				// is case 2
+				matchingsByType.get(1).add(matching);
+			}
+		}
+
 	}
 
 	/**
@@ -118,11 +168,42 @@ public class StabilityChecker {
 	}
 
 	public boolean isStable(PreferenceSystem preferenceSystem) {
-		if (quickChecks(preferenceSystem)) {
-			return true;
+		if(preferenceSystem.isComplete()) {
+			return completeCheck(preferenceSystem);
 		}
-		if (preferenceSystem.length >= 0 && slowChecks(preferenceSystem)) {
-			return true;
+		return false;
+	}
+
+	//complete checking procedure for n=4
+	private boolean completeCheck(PreferenceSystem preferenceSystem) {
+		CheckInductive check = (CheckInductive)longChecks[0]; //inductive check
+		for(Matching matching : matchingsByType.get(2)) {
+			if(check.checkImpl(matching, preferenceSystem)) {
+				return true;
+			}
+		}
+		for(Matching matching : matchingsByType.get(3)) {
+			if(matching.getPartner(0, 1) != preferenceSystem.preferences[0][1][0]) {
+				continue;
+			}
+			if(check.checkImpl(matching, preferenceSystem)) {
+				return true;
+			}
+		}
+		for(int i = 1; i<preferenceSystem.numberOfAgents; ++i) {
+			if(preferenceSystem.preferences[1][i][0] != 0) {
+				return true;
+			}
+		}
+		for(Matching matching : matchingsByType.get(1)) {
+			if(check.checkImpl(matching, preferenceSystem)) {
+				return true;
+			}
+		}
+		for(Matching matching : matchingsByType.get(0)) {
+			if(check.checkImpl(matching, preferenceSystem)) {
+				return true;
+			}
 		}
 		return false;
 	}
@@ -190,7 +271,7 @@ public class StabilityChecker {
 
 		CheckInductive check = new CheckInductive(matchings, false);
 		System.out.println(check.check(preferenceSystem));
-		
+
 		System.out.println("Particular Inductive Test");
 		System.out.println(stableMatching);
 		System.out.println(check.checkImpl(stableMatching, preferenceSystem));

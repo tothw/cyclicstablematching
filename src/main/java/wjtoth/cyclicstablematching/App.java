@@ -36,7 +36,7 @@ public class App {
 				return;
 			} 
 		} else {
-			preferenceSystem = new PreferenceSystem(3, 5);
+			preferenceSystem = new PreferenceSystem(3, 4);
 		}
 
 		System.out.println("Track Check Performance (y/n)?");
