@@ -151,6 +151,7 @@ public class App {
 		System.out.println("Case 2 used: " + stabilityChecker.case2);
 		System.out.println("Case 3 used: " + stabilityChecker.case3);
 		System.out.println("Case 4 used: " + stabilityChecker.case4);
+		System.out.println("Case 5 used: " + stabilityChecker.case5);
 		System.out.println("Terminated");
 	}
 

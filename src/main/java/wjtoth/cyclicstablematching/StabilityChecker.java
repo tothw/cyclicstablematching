@@ -29,7 +29,7 @@ public class StabilityChecker {
 	Check[] quickChecks;
 	Check[] longChecks;
 	
-	public boolean case1,case2,case3,case4;
+	public boolean case1,case2,case3,case4,case5;
 
 	/**
 	 * Standard constructor
@@ -55,11 +55,12 @@ public class StabilityChecker {
 		case2 = false;
 		case3 = false;
 		case4 = false;
+		case5 = false;
 	}
 
 	private void sortMatchingsByType() {
 		matchingsByType = new ArrayList<List<Matching>>();
-		for (int i = 0; i < 4; ++i) {
+		for (int i = 0; i < 5; ++i) {
 			matchingsByType.add(new LinkedList<Matching>());
 		}
 		for (Matching matching : matchings) {
@@ -87,6 +88,14 @@ public class StabilityChecker {
 				if (partnerOfD0 == 2) {
 					// can be case 4 provided m1 gets their first choice
 					matchingsByType.get(3).add(matching);
+				}
+			}
+			if(partnerOfW0 == 2) {
+				//can be case 5
+				int partnerOfD0 = matching.getPartner(2, 0);
+				if(partnerOfD0 == 2 || partnerOfD0 == 1) {
+					//still need to verify partner of d1 at PS evaluation time
+					matchingsByType.get(4).add(matching);
 				}
 			}
 		}
@@ -177,7 +186,7 @@ public class StabilityChecker {
 	public boolean isStable(PreferenceSystem preferenceSystem) {
 		if(quickChecks[1].check(preferenceSystem)) {
 			//quickChecks[1] checks for 111 triples
-			return true;
+			//return true;
 		}
 		if(preferenceSystem.isComplete()) {
 			return completeCheck(preferenceSystem);
@@ -203,6 +212,16 @@ public class StabilityChecker {
 				return true;
 			}
 		}
+		for(Matching matching : matchingsByType.get(4)) {
+			if(matching.getPartner(2, 1) != preferenceSystem.preferences[2][1][0]) {
+				continue;
+			}
+			if(check.checkImpl(matching, preferenceSystem)) {
+				case5 = true;
+				return true;
+			}
+		}
+		
 		for(int i = 1; i<preferenceSystem.numberOfAgents; ++i) {
 			if(preferenceSystem.preferences[1][i][0] != 0) {
 				return true;
