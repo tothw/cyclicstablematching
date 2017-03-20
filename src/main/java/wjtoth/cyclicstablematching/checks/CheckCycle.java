@@ -39,6 +39,13 @@ public class CheckCycle extends Check{
 		if (preferenceSystem.preferences[nextGroup][next][0] == agent) {
 			return true;
 		} else {
+			if(choice == 2 && preferenceSystem.preferences[nextGroup][next][1] == agent) {
+				int firstChoice1 = preferenceSystem.preferences[nextGroup][next][0];
+				int firstChoice2 = preferenceSystem.preferences[group][agent][0];
+				if(preferenceSystem.preferences[(nextGroup+1)%preferenceSystem.numberOfGroups][firstChoice1][0] == firstChoice2) {
+					return true;
+				}
+			}
 			return false;
 		}
 	}
